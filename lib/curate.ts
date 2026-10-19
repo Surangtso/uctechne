@@ -36,10 +36,14 @@ export type Draft = {
 };
 
 // The pasted text goes to the model and nowhere else: it is not stored and not shown.
-export async function draftCuration(input: { text: string; platform: string; author: string }): Promise<Draft> {
+// maxChars is for one-off scripts that must read a whole long post; the admin form always uses the default.
+export async function draftCuration(
+  input: { text: string; platform: string; author: string },
+  maxChars: number = DRAFT_MAX_CHARS,
+): Promise<Draft> {
   const full = input.text.trim();
   if (!full) throw new Error("붙여넣은 글이 비어 있습니다.");
-  const text = full.slice(0, DRAFT_MAX_CHARS);
+  const text = full.slice(0, maxChars);
   const { results } = await callJson<{ id: string; titleKo: string; summaryKo: string }>(
     new Anthropic(),
     DRAFT_MODEL,
@@ -54,7 +58,7 @@ export async function draftCuration(input: { text: string; platform: string; aut
   return {
     titleKo: r.titleKo.trim(),
     summaryKo: r.summaryKo.trim(),
-    truncated: full.length > DRAFT_MAX_CHARS,
+    truncated: full.length > maxChars,
     totalChars: full.length,
   };
 }
