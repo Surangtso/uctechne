@@ -15,7 +15,7 @@ export default function Home({
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
   return (
-    <div className="mx-auto w-full max-w-2xl px-4 py-10">
+    <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <header className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">US &amp; China Tech News</h1>
         <p className="mt-2 text-sm text-muted">
@@ -51,34 +51,34 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
       {articles.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted">표시할 기사가 없습니다.</p>
       ) : (
-        <ul className="space-y-3">
+        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
           {articles.map((a) => {
             const src = sourceOf.get(a.sourceId);
             const comment = a.commentManual ?? a.commentKo;
             const title = a.titleKo ?? a.titleOriginal;
             return (
-              <li key={a.id} className="rounded-xl border border-line bg-card p-4">
-                <div className="mb-1.5 flex items-center gap-2 text-xs text-muted">
+              <li key={a.id} className="flex flex-col rounded-xl border border-line bg-card p-5">
+                <div className="mb-2 flex items-center gap-2 text-xs text-muted">
                   <span>{src ? `${src.name} · ${REGION[src.lang]}` : a.sourceId}</span>
                   <span>·</span>
                   <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt)}</time>
                   {a.paywalled && <span className="rounded bg-line px-1.5 py-0.5">유료 매체 · 제목만</span>}
                 </div>
-                <h2 className="text-base font-medium leading-snug">
+                <h2 className="text-xl font-bold leading-snug">
                   <a href={a.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
                     {title}
                   </a>
                 </h2>
                 {a.titleKo && <p className="mt-1 text-xs text-muted">{a.titleOriginal}</p>}
-                {a.summaryKo && <p className="mt-2 text-sm leading-relaxed">{a.summaryKo}</p>}
+                {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed">{a.summaryKo}</p>}
                 {comment && (
-                  <p className="mt-2 border-l-2 border-accent pl-3 text-sm leading-relaxed text-muted">{comment}</p>
+                  <p className="mt-3 border-l-2 border-accent pl-3 text-sm leading-relaxed text-muted">{comment}</p>
                 )}
                 <a
                   href={a.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-3 inline-block text-xs text-accent hover:underline"
+                  className="mt-auto inline-block self-start pt-4 text-sm text-accent hover:underline"
                 >
                   원문 보기 ↗
                 </a>
