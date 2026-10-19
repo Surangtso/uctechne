@@ -145,7 +145,10 @@ function Nav({ activeId }: { activeId?: string }) {
           ))}
         </div>
       ))}
-      <Chip href="/" label="전체" on={!activeId} />
+      {/* a little extra room between the CN outlets and 전체 */}
+      <div className="ml-2 flex">
+        <Chip href="/" label="전체" on={!activeId} />
+      </div>
       {/* flex, so the link is a block like the other chips and gets the same height */}
       <div className="ml-auto flex">
         <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} curated />
