@@ -1,23 +1,18 @@
+import { Suspense } from "react";
 import Link from "next/link";
+import { getFeed } from "@/lib/feed";
 import { timeAgo } from "@/lib/format";
 import { SOURCES } from "@/lib/sources";
-import { listPublic } from "@/lib/store";
 
 const PAGE_SIZE = 60;
 const FLAG = { en: "🇺🇸", zh: "🇨🇳" } as const;
+const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
 
-export default async function Home({
+export default function Home({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }) {
-  const { source } = await searchParams;
-  const active = SOURCES.find((s) => s.id === source);
-
-  // articles the AI step has not looked at yet stay visible; non-tech ones are filtered out in the query
-  const articles = await listPublic({ sourceId: active?.id, limit: PAGE_SIZE });
-  const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
-
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
       <header className="mb-8">
@@ -27,17 +22,33 @@ export default async function Home({
         </p>
       </header>
 
-      <nav className="mb-6 flex flex-wrap gap-2 text-sm">
-        <Chip href="/" label="전체" on={!active} />
-        {SOURCES.map((s) => (
-          <Chip key={s.id} href={`/?source=${s.id}`} label={`${FLAG[s.lang]} ${s.name}`} on={active?.id === s.id} />
-        ))}
-      </nav>
+      {/* the filter lives in the query string, which is only known per request */}
+      <Suspense
+        fallback={
+          <>
+            <Nav />
+            <p className="py-16 text-center text-sm text-muted">불러오는 중…</p>
+          </>
+        }
+      >
+        <Feed searchParams={searchParams} />
+      </Suspense>
+    </div>
+  );
+}
 
+async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: string | string[] | undefined }> }) {
+  const { source } = await searchParams;
+  // only known ids reach the cache, so a made-up ?source= can't create cache entries
+  const active = SOURCES.find((s) => s.id === source);
+  // articles the AI step has not looked at yet stay visible; non-tech ones are filtered out in the query
+  const articles = await getFeed(active?.id, PAGE_SIZE);
+
+  return (
+    <>
+      <Nav activeId={active?.id} />
       {articles.length === 0 ? (
-        <p className="py-16 text-center text-sm text-muted">
-          표시할 기사가 없습니다. <code>npm run collect</code>로 기사를 수집하세요.
-        </p>
+        <p className="py-16 text-center text-sm text-muted">표시할 기사가 없습니다.</p>
       ) : (
         <ul className="space-y-3">
           {articles.map((a) => {
@@ -75,7 +86,18 @@ export default async function Home({
           })}
         </ul>
       )}
-    </div>
+    </>
+  );
+}
+
+function Nav({ activeId }: { activeId?: string }) {
+  return (
+    <nav className="mb-6 flex flex-wrap gap-2 text-sm">
+      <Chip href="/" label="전체" on={!activeId} />
+      {SOURCES.map((s) => (
+        <Chip key={s.id} href={`/?source=${s.id}`} label={`${FLAG[s.lang]} ${s.name}`} on={activeId === s.id} />
+      ))}
+    </nav>
   );
 }
 
