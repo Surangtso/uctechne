@@ -123,11 +123,48 @@ function parseHuxiu(html: string, source: Source): CollectedItem[] {
   return [...byId.values()];
 }
 
-export async function collectSource(source: Source): Promise<{ items: CollectedItem[]; report: CollectReport }> {
+async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>): Promise<R[]> {
+  const out: R[] = new Array(list.length);
+  let next = 0;
+  await Promise.all(
+    Array.from({ length: Math.min(limit, list.length) }, async () => {
+      while (next < list.length) {
+        const i = next++;
+        out[i] = await fn(list[i]);
+      }
+    }),
+  );
+  return out;
+}
+
+// the huxiu front page has no dates or blurbs; each article page carries both in its meta tags
+async function withHuxiuDetail(item: CollectedItem): Promise<CollectedItem> {
+  try {
+    const $ = cheerio.load(await fetchText(item.url));
+    const blurb = $('meta[name="description"]').attr("content") ?? "";
+    const time = $('meta[property="article:published_time"]').attr("content") ?? "";
+    return { ...item, excerpt: plain(blurb), publishedAt: toIso(time) };
+  } catch {
+    return item;
+  }
+}
+
+// known: urls already stored, so html sources only fetch detail pages for new articles
+export async function collectSource(
+  source: Source,
+  known: Set<string> = new Set(),
+): Promise<{ items: CollectedItem[]; report: CollectReport }> {
   try {
     const body = await fetchText(source.url);
-    const items = source.kind === "rss" ? parseFeed(body, source) : parseHuxiu(body, source);
+    let items = source.kind === "rss" ? parseFeed(body, source) : parseHuxiu(body, source);
     if (items.length === 0) throw new Error("parsed 0 items");
+    if (source.kind === "html") {
+      items = await mapLimit(
+        items.filter((i) => !known.has(i.url)),
+        4,
+        withHuxiuDetail,
+      );
+    }
     return { items, report: { sourceId: source.id, ok: true, count: items.length } };
   } catch (e) {
     const error = e instanceof Error ? e.message : String(e);
@@ -135,7 +172,7 @@ export async function collectSource(source: Source): Promise<{ items: CollectedI
   }
 }
 
-export async function collectAll(sources: Source[]) {
-  const results = await Promise.all(sources.map(collectSource));
+export async function collectAll(sources: Source[], known: Set<string> = new Set()) {
+  const results = await Promise.all(sources.map((s) => collectSource(s, known)));
   return { items: results.flatMap((r) => r.items), reports: results.map((r) => r.report) };
 }

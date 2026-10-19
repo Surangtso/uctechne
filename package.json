@@ -7,9 +7,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "collect": "tsx scripts/collect.ts"
+    "collect": "tsx scripts/collect.ts",
+    "enrich": "tsx --env-file=.env.local scripts/enrich.ts",
+    "update": "npm run collect && npm run enrich"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.135.0",
     "cheerio": "^1.2.0",
     "fast-xml-parser": "^5.11.2",
     "next": "16.2.10",

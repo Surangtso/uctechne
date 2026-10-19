@@ -1,9 +1,10 @@
 import { collectAll } from "../lib/collect";
 import { SOURCES } from "../lib/sources";
-import { mergeItems } from "../lib/store";
+import { loadArticles, mergeItems } from "../lib/store";
 
 async function main() {
-  const { items, reports } = await collectAll(SOURCES);
+  const known = new Set((await loadArticles()).map((a) => a.url));
+  const { items, reports } = await collectAll(SOURCES, known);
   for (const r of reports) {
     console.log(`${r.ok ? "ok  " : "FAIL"} ${r.sourceId.padEnd(16)} ${r.ok ? r.count + " items" : r.error}`);
   }
