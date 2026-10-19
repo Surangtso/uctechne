@@ -5,7 +5,8 @@ import { timeAgo } from "@/lib/format";
 import { SOURCES } from "@/lib/sources";
 
 const PAGE_SIZE = 60;
-const FLAG = { en: "🇺🇸", zh: "🇨🇳" } as const;
+// flag emoji render as plain "US"/"CN" letters on Windows, so regions are written out
+const REGION = { en: "미국", zh: "중국" } as const;
 const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
 
 export default function Home({
@@ -58,7 +59,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             return (
               <li key={a.id} className="rounded-xl border border-line bg-card p-4">
                 <div className="mb-1.5 flex items-center gap-2 text-xs text-muted">
-                  <span>{src ? `${FLAG[src.lang]} ${src.name}` : a.sourceId}</span>
+                  <span>{src ? `${src.name} · ${REGION[src.lang]}` : a.sourceId}</span>
                   <span>·</span>
                   <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt)}</time>
                   {a.paywalled && <span className="rounded bg-line px-1.5 py-0.5">유료 매체 · 제목만</span>}
@@ -92,10 +93,18 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
 
 function Nav({ activeId }: { activeId?: string }) {
   return (
-    <nav className="mb-6 flex flex-wrap gap-2 text-sm">
-      <Chip href="/" label="전체" on={!activeId} />
-      {SOURCES.map((s) => (
-        <Chip key={s.id} href={`/?source=${s.id}`} label={`${FLAG[s.lang]} ${s.name}`} on={activeId === s.id} />
+    <nav className="mb-6 space-y-2 text-sm">
+      <div className="flex items-center gap-2">
+        <span className="w-8" />
+        <Chip href="/" label="전체" on={!activeId} />
+      </div>
+      {(["en", "zh"] as const).map((lang) => (
+        <div key={lang} className="flex flex-wrap items-center gap-2">
+          <span className="w-8 text-xs text-muted">{REGION[lang]}</span>
+          {SOURCES.filter((s) => s.lang === lang).map((s) => (
+            <Chip key={s.id} href={`/?source=${s.id}`} label={s.name} on={activeId === s.id} />
+          ))}
+        </div>
       ))}
     </nav>
   );
