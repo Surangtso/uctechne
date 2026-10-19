@@ -100,7 +100,7 @@ function Nav({ activeId }: { activeId?: string }) {
       </div>
       {(["en", "zh"] as const).map((lang) => (
         <div key={lang} className="flex flex-wrap items-center gap-2">
-          <span className="w-8 text-xs text-muted">{REGION[lang]}</span>
+          <span className="w-8 text-[11px] font-medium tracking-wide text-muted">{lang === "en" ? "US" : "CN"}</span>
           {SOURCES.filter((s) => s.lang === lang).map((s) => (
             <Chip key={s.id} href={`/?source=${s.id}`} label={s.name} on={activeId === s.id} />
           ))}
