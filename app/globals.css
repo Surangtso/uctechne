@@ -50,6 +50,10 @@ body {
   font-family: "Noto Sans SC Variable", "Noto Sans KR Variable", system-ui, sans-serif;
   font-weight: 550;
 }
+/* chips whose label is plain English: Arimo (Arial-compatible, weight 400-700), Arial where it is missing */
+.chip.chip-latin {
+  font-family: "Arimo Variable", Arial, "Liberation Sans", sans-serif;
+}
 
 /* News cards: the AI summary, the quote and the "원문 보기" link slide open under the card on hover.
    The panel is absolutely positioned, so opening it never moves the cards around it.

@@ -3,6 +3,8 @@ import type { Metadata } from "next";
 // Hangul comes from the KR font; Chinese characters from the SC font. Verdana (Latin) is set in globals.css.
 import "@fontsource-variable/noto-sans-kr";
 import "@fontsource-variable/noto-sans-sc";
+// Arial-compatible with a variable weight, for the English filter chips (Arial itself has no medium weight)
+import "@fontsource-variable/arimo";
 import "./globals.css";
 
 export const metadata: Metadata = {

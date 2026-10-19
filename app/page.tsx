@@ -162,7 +162,7 @@ function Chip({ href, label, on, curated }: { href: string; label: string; on: b
       : "bg-accent text-background"
     : "bg-card text-tagline hover:text-accent";
   return (
-    <Link href={href} className={`chip rounded-full px-3 py-1.5 ${tone}`}>
+    <Link href={href} className={`chip${/^[\x20-\x7e]+$/.test(label) ? " chip-latin" : ""} rounded-full px-3 py-1.5 ${tone}`}>
       {label}
     </Link>
   );
