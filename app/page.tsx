@@ -8,6 +8,8 @@ const PAGE_SIZE = 60;
 // flag emoji render as plain "US"/"CN" letters on Windows, so regions are written out
 const REGION = { en: "미국", zh: "중국" } as const;
 const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
+// source_id of hand-curated posts (see lib/store.ts insertCurated)
+const CURATED = "curated";
 
 export default function Home({
   searchParams,
@@ -42,12 +44,13 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
   const { source } = await searchParams;
   // only known ids reach the cache, so a made-up ?source= can't create cache entries
   const active = SOURCES.find((s) => s.id === source);
+  const activeId = source === CURATED ? CURATED : active?.id;
   // articles the AI step has not looked at yet stay visible; non-tech ones are filtered out in the query
-  const articles = await getFeed(active?.id, PAGE_SIZE);
+  const articles = await getFeed(activeId, PAGE_SIZE);
 
   return (
     <>
-      <Nav activeId={active?.id} />
+      <Nav activeId={activeId} />
       {articles.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted">표시할 기사가 없습니다.</p>
       ) : (
@@ -56,10 +59,16 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             const src = sourceOf.get(a.sourceId);
             const comment = a.commentManual ?? a.commentKo;
             const title = a.titleKo ?? a.titleOriginal;
+            const where = a.curated
+              ? [a.sourceLabel, a.author].filter(Boolean).join(" · ")
+              : src
+                ? `${src.name} · ${REGION[src.lang]}`
+                : a.sourceId;
             return (
               <li key={a.id} className="flex flex-col rounded-xl bg-card p-5">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted">
-                  <span>{src ? `${src.name} · ${REGION[src.lang]}` : a.sourceId}</span>
+                  {a.curated && <span className="rounded bg-accent px-1.5 py-0.5 text-background">큐레이션</span>}
+                  <span>{where}</span>
                   <span>·</span>
                   <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt)}</time>
                   {a.paywalled && <span className="rounded bg-line px-1.5 py-0.5">유료 매체 · 제목만</span>}
@@ -69,8 +78,11 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                     {title}
                   </a>
                 </h2>
-                {a.titleKo && <p className="mt-1 text-[11px] leading-snug text-muted">{a.titleOriginal}</p>}
+                {a.titleKo && a.titleOriginal && (
+                  <p className="mt-1 text-[11px] leading-snug text-muted">{a.titleOriginal}</p>
+                )}
                 {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed">{a.summaryKo}</p>}
+                {a.quote && <p className="mt-3 text-sm italic leading-relaxed text-muted">“{a.quote}”</p>}
                 {comment && (
                   <p className="mt-3 border-l-2 border-accent pl-3 text-sm leading-relaxed text-muted">{comment}</p>
                 )}
@@ -97,6 +109,7 @@ function Nav({ activeId }: { activeId?: string }) {
       <div className="flex items-center gap-2">
         <span className="w-8" />
         <Chip href="/" label="전체" on={!activeId} />
+        <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} />
       </div>
       {(["en", "zh"] as const).map((lang) => (
         <div key={lang} className="flex flex-wrap items-center gap-2">

@@ -21,7 +21,13 @@ create table if not exists public.articles (
   summary_ko      text,
   comment_ko      text,
   -- written by hand; wins over comment_ko when present
-  comment_manual  text
+  comment_manual  text,
+
+  -- hand-curated posts (see migrations/20261019_curated.sql)
+  curated         boolean not null default false,
+  author          text,
+  source_label    text,
+  quote           text
 );
 
 create index if not exists articles_sort_at_idx on public.articles (sort_at desc);

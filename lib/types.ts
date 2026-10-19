@@ -20,6 +20,11 @@ export type Article = {
   importance?: number;
   // written by hand, wins over commentKo when present
   commentManual?: string;
+  // hand-curated posts: shown with the author and where they appeared; never collected or AI-filtered
+  curated?: boolean;
+  author?: string;
+  sourceLabel?: string;
+  quote?: string;
 };
 
 export type CollectedItem = Omit<Article, "id" | "firstSeenAt">;

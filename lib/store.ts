@@ -20,6 +20,10 @@ type Row = {
   summary_ko: string | null;
   comment_ko: string | null;
   comment_manual: string | null;
+  curated?: boolean;
+  author?: string | null;
+  source_label?: string | null;
+  quote?: string | null;
 };
 
 const TABLE = "articles";
@@ -27,7 +31,7 @@ const PAGE = 1000; // PostgREST returns at most 1000 rows per request
 const CHUNK = 500;
 // everything the page needs; excerpt (the original's text) is deliberately left out
 const PUBLIC_COLS =
-  "id,source_id,url,title_original,published_at,first_seen_at,paywalled,is_tech,importance,title_ko,summary_ko,comment_ko,comment_manual";
+  "id,source_id,url,title_original,published_at,first_seen_at,paywalled,is_tech,importance,title_ko,summary_ko,comment_ko,comment_manual,curated,author,source_label,quote";
 
 export function articleId(url: string): string {
   return createHash("sha1").update(url).digest("hex").slice(0, 16);
@@ -54,6 +58,10 @@ function toRow(a: Article): Row {
     summary_ko: nul(a.summaryKo),
     comment_ko: nul(a.commentKo),
     comment_manual: nul(a.commentManual),
+    // collected articles never send the curation columns, so collecting works before they exist in the database
+    ...(a.curated
+      ? { curated: true, author: nul(a.author), source_label: nul(a.sourceLabel), quote: nul(a.quote) }
+      : {}),
   };
 }
 
@@ -77,6 +85,10 @@ function fromRow(r: Partial<Row> & Pick<Row, "id" | "source_id" | "url" | "title
     summaryKo: opt(r.summary_ko),
     commentKo: opt(r.comment_ko),
     commentManual: opt(r.comment_manual),
+    curated: r.curated || undefined,
+    author: opt(r.author),
+    sourceLabel: opt(r.source_label),
+    quote: opt(r.quote),
   };
 }
 
@@ -181,6 +193,62 @@ export async function listPublic(opts: { sourceId?: string; limit: number }): Pr
   if (opts.sourceId) q = q.eq("source_id", opts.sourceId);
   const rows = check(await q, "read feed") as unknown as Parameters<typeof fromRow>[0][];
   return rows.map(fromRow);
+}
+
+export type CuratedInput = {
+  url: string;
+  sourceLabel: string;
+  author?: string;
+  titleOriginal?: string;
+  titleKo: string;
+  summaryKo?: string;
+  comment?: string;
+  quote?: string;
+};
+
+const blank = (s?: string) => (s && s.trim() ? s.trim() : undefined);
+
+// A hand-picked post. The pasted original text is never stored: excerpt stays empty and the AI
+// steps skip these rows (processedAt/summarizedAt are set), so only what the curator wrote is kept.
+export async function insertCurated(input: CuratedInput): Promise<Article> {
+  const now = new Date().toISOString();
+  const article: Article = {
+    id: articleId(input.url),
+    sourceId: "curated",
+    url: input.url,
+    titleOriginal: blank(input.titleOriginal) ?? "",
+    firstSeenAt: now,
+    excerpt: "",
+    paywalled: false,
+    processedAt: now,
+    summarizedAt: now,
+    isTech: true,
+    titleKo: input.titleKo.trim(),
+    summaryKo: blank(input.summaryKo),
+    commentManual: blank(input.comment),
+    curated: true,
+    author: blank(input.author),
+    sourceLabel: input.sourceLabel.trim(),
+    quote: blank(input.quote),
+  };
+  const res = await db().from(TABLE).insert(toRow(article));
+  if (res.error) {
+    // url is unique: the same link may already be stored, collected or curated
+    throw new Error(res.error.code === "23505" ? "이미 등록된 링크입니다." : `save curated post: ${res.error.message}`);
+  }
+  return article;
+}
+
+export async function listCurated(): Promise<Article[]> {
+  const rows = check(
+    await db().from(TABLE).select(PUBLIC_COLS).eq("curated", true).order("sort_at", { ascending: false }).limit(200),
+    "read curated posts",
+  ) as unknown as Parameters<typeof fromRow>[0][];
+  return rows.map(fromRow);
+}
+
+export async function deleteCurated(id: string): Promise<void> {
+  check(await db().from(TABLE).delete().eq("id", id).eq("curated", true), `delete curated ${id}`);
 }
 
 // full rows including excerpt; used by the one-off import
