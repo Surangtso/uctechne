@@ -36,6 +36,17 @@ export default function Home({
       >
         <Feed searchParams={searchParams} />
       </Suspense>
+
+      <footer className="mt-12 space-y-1 text-xs leading-relaxed text-muted">
+        <p>번역과 요약은 AI가 작성하며 오류가 있을 수 있습니다. 정확한 내용은 원문 링크에서 확인하세요.</p>
+        <p>각 글의 저작권은 해당 매체와 작성자에게 있습니다.</p>
+        <p>
+          삭제·정정 요청:{" "}
+          <a href="mailto:surangne@gmail.com" className="text-accent hover:underline">
+            surangne@gmail.com
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }
