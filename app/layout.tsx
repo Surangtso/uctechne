@@ -9,7 +9,7 @@ const notoSansKr = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "글로벌 테크 다이제스트",
+  title: "US & China Tech News",
   description: "미국·중국 주요 기술 미디어의 기사를 한국어 제목과 요약으로 모아봅니다.",
 };
 

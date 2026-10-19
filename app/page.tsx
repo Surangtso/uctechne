@@ -17,7 +17,7 @@ export default function Home({
   return (
     <div className="mx-auto w-full max-w-2xl px-4 py-10">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">글로벌 테크 다이제스트</h1>
+        <h1 className="text-2xl font-bold tracking-tight">US &amp; China Tech News</h1>
         <p className="mt-2 text-sm text-muted">
           미국·중국 기술 미디어의 기사를 한국어 제목과 짧은 코멘트로 모았습니다. 본문은 원문 링크에서 확인하세요.
         </p>
