@@ -182,12 +182,13 @@ export async function saveEnrichment(a: Article): Promise<void> {
   );
 }
 
-// articles for the feed: tech (or not yet classified), newest first
+// articles for the feed: only ones the AI step has classified as tech, newest first.
+// Unprocessed rows stay out, so an untranslated title never shows while it waits for the next update.
 export async function listPublic(opts: { sourceId?: string; limit: number }): Promise<Article[]> {
   let q = db()
     .from(TABLE)
     .select(PUBLIC_COLS)
-    .or("is_tech.is.null,is_tech.eq.true")
+    .eq("is_tech", true)
     .order("sort_at", { ascending: false })
     .limit(opts.limit);
   if (opts.sourceId) q = q.eq("source_id", opts.sourceId);

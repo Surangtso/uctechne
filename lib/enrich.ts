@@ -31,6 +31,7 @@ propaganda
 
 titleKo
 - Only when isTech is true, otherwise an empty string.
+- Always Korean (Hangul). Never copy the original title back, even when it is short or mostly names: translate every Chinese or English headline.
 - A natural Korean headline that translates the original title faithfully. Do not add claims, sensationalism or details. Use the conventional Korean names of companies and people (엔비디아, 바이트댄스) and keep product names in Latin script. Drop outlet boilerplate such as "36氪获悉".`;
 
 const SUMMARY_SYSTEM = `${COMMON}
@@ -113,11 +114,11 @@ export async function callJson<T extends { id: string }>(
   };
 }
 
-export function translateBatch(client: Anthropic, batch: Article[]) {
+export function translateBatch(client: Anthropic, batch: Article[], model: string = TRANSLATE_MODEL) {
   const payload = batch.map((a) => ({ id: a.id, ...sourceInfo(a), title: a.titleOriginal, excerpt: a.excerpt }));
   return callJson<TranslateResult>(
     client,
-    TRANSLATE_MODEL,
+    model,
     TRANSLATE_SYSTEM,
     TRANSLATE_SCHEMA,
     payload,
@@ -144,6 +145,10 @@ export function summarizeBatch(client: Anthropic, batch: Article[]) {
 }
 
 const clean = (s: string) => (s.trim() ? s.trim() : undefined);
+
+// The cheap model sometimes hands the original title back as the "translation". A Korean headline always has Hangul.
+export const hasHangul = (s: string) => /[가-힯]/.test(s);
+export const untranslated = (r: TranslateResult) => r.isTech && !r.propaganda && !hasHangul(r.titleKo);
 
 export function applyTranslation(article: Article, r: TranslateResult): void {
   // propaganda is stored as "not for the digest" (is_tech = false), which also skips the summary step

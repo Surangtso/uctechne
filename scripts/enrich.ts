@@ -7,6 +7,8 @@ import {
   applyTranslation,
   summarizeBatch,
   translateBatch,
+  untranslated,
+  type TranslateResult,
   type Usage,
 } from "../lib/enrich";
 import { pendingSummary, pendingTranslation, saveEnrichment } from "../lib/store";
@@ -73,15 +75,23 @@ async function main() {
   }
 
   // newest first, so a limited run covers what readers see first
+  const applyTitle = (isRetry: boolean) => (a: Article, r: TranslateResult) => {
+    // A "translation" without Hangul is the original title copied back. Leave the article pending so the
+    // stronger model gets it next; on that retry the result is kept as is, so nothing loops forever.
+    if (!isRetry && untranslated(r)) {
+      console.log(`  not translated, retrying: [${a.sourceId}] ${a.titleOriginal}`);
+      return;
+    }
+    applyTranslation(a, r);
+    if (r.propaganda) console.log(`  left out as party/state messaging: [${a.sourceId}] ${a.titleOriginal}`);
+  };
+  await phase("translate", TRANSLATE_MODEL, await pendingTranslation(limit), (b) => translateBatch(client, b), applyTitle(false));
   await phase(
-    "translate",
-    TRANSLATE_MODEL,
+    "translate (retry)",
+    SUMMARY_MODEL,
     await pendingTranslation(limit),
-    (b) => translateBatch(client, b),
-    (a, r) => {
-      applyTranslation(a, r);
-      if (r.propaganda) console.log(`  left out as party/state messaging: [${a.sourceId}] ${a.titleOriginal}`);
-    },
+    (b) => translateBatch(client, b, SUMMARY_MODEL),
+    applyTitle(true),
   );
   await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummary);
 }

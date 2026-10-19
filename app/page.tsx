@@ -56,7 +56,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
   // only known ids reach the cache, so a made-up ?source= can't create cache entries
   const active = SOURCES.find((s) => s.id === source);
   const activeId = source === CURATED ? CURATED : active?.id;
-  // articles the AI step has not looked at yet stay visible; non-tech ones are filtered out in the query
+  // only articles the AI step has classified as tech are listed (see listPublic)
   const articles = await getFeed(activeId, PAGE_SIZE);
 
   return (
