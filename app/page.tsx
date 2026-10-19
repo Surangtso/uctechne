@@ -19,7 +19,7 @@ export default function Home({
       <header className="mb-8">
         <h1 className="text-2xl font-bold tracking-tight">US &amp; China Tech News</h1>
         <p className="mt-2 text-sm text-muted">
-          미국·중국 기술 미디어의 기사를 한국어 제목과 짧은 코멘트로 모았습니다. 본문은 원문 링크에서 확인하세요.
+          미국·중국 테크 미디어 기사를 한 곳에서 확인할 수 있습니다. 본문은 원문 링크에서 확인할 수 있습니다.
         </p>
       </header>
 

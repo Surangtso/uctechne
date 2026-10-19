@@ -10,7 +10,7 @@ const notoSansKr = Noto_Sans_KR({
 
 export const metadata: Metadata = {
   title: "US & China Tech News",
-  description: "미국·중국 주요 기술 미디어의 기사를 한국어 제목과 요약으로 모아봅니다.",
+  description: "미국·중국 테크 미디어 기사를 한 곳에서 확인할 수 있습니다.",
 };
 
 export default function RootLayout({
