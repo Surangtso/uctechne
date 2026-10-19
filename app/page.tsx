@@ -70,16 +70,17 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             const src = sourceOf.get(a.sourceId);
             const comment = a.commentManual ?? a.commentKo;
             const title = a.titleKo ?? a.titleOriginal;
-            const where = a.curated
-              ? [a.sourceLabel, a.author].filter(Boolean).join(" · ")
-              : src
-                ? `${src.name} · ${REGION[src.lang]}`
-                : a.sourceId;
+            // outlet name (darker) and what follows it (region or author, kept gray)
+            const outlet = a.curated ? (a.sourceLabel ?? "큐레이션") : (src?.name ?? a.sourceId);
+            const outletNote = a.curated ? a.author : src ? REGION[src.lang] : undefined;
             return (
               <li key={a.id} className="news-card rounded-xl bg-card p-5">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted">
                   {a.curated && <span className="rounded bg-accent px-1.5 py-0.5 text-background">큐레이션</span>}
-                  <span>{where}</span>
+                  <span>
+                    <span className="text-tagline">{outlet}</span>
+                    {outletNote ? ` · ${outletNote}` : ""}
+                  </span>
                   <span>·</span>
                   <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt)}</time>
                   {a.paywalled && <span className="rounded bg-line px-1.5 py-0.5">유료 매체 · 제목만</span>}
@@ -146,7 +147,7 @@ function Chip({ href, label, on }: { href: string; label: string; on: boolean })
     <Link
       href={href}
       className={`rounded-full px-3 py-1.5 ${
-        on ? "bg-accent text-background" : "bg-card text-muted hover:text-foreground"
+        on ? "bg-accent text-background" : "bg-card text-tagline hover:text-accent"
       }`}
     >
       {label}
