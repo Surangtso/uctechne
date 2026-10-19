@@ -19,7 +19,7 @@
   --color-accent: var(--accent);
   --color-tagline: var(--tagline);
   /* the selected 큐레이션 chip: the same teal in light and dark */
-  --color-curated: #1fb5c9;
+  --color-curated: #2aa7e0;
   /* Latin letters and digits use Verdana. Verdana has no CJK, so Chinese characters come from Noto Sans SC
      and Hangul (absent there) from Noto Sans KR. Geneva (Mac) and DejaVu Sans (Linux) stand in for Verdana. */
   --font-sans: Verdana, Geneva, "DejaVu Sans", "Noto Sans SC Variable", "Noto Sans KR Variable", system-ui,
@@ -42,6 +42,13 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family: var(--font-sans);
+}
+
+/* Filter chips: a weight halfway between regular (400) and bold (700). Verdana only has those two weights,
+   so chip labels use the variable Noto fonts (SC first so Chinese keeps its glyph shapes, then KR for Hangul). */
+.chip {
+  font-family: "Noto Sans SC Variable", "Noto Sans KR Variable", system-ui, sans-serif;
+  font-weight: 550;
 }
 
 /* News cards: the AI summary, the quote and the "원문 보기" link slide open under the card on hover.

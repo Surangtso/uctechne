@@ -136,7 +136,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
 function Nav({ activeId }: { activeId?: string }) {
   return (
     // one row: US outlets, CN outlets, 전체, and 큐레이션 pushed to the far right (rows wrap on narrow screens)
-    <nav className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+    <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
       {(["en", "zh"] as const).map((lang) => (
         <div key={lang} className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-medium tracking-wide text-muted">{lang === "en" ? "US" : "CN"}</span>
@@ -146,7 +146,8 @@ function Nav({ activeId }: { activeId?: string }) {
         </div>
       ))}
       <Chip href="/" label="전체" on={!activeId} />
-      <div className="ml-auto">
+      {/* flex, so the link is a block like the other chips and gets the same height */}
+      <div className="ml-auto flex">
         <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} curated />
       </div>
     </nav>
@@ -161,7 +162,7 @@ function Chip({ href, label, on, curated }: { href: string; label: string; on: b
       : "bg-accent text-background"
     : "bg-card text-tagline hover:text-accent";
   return (
-    <Link href={href} className={`rounded-full px-3 py-1.5 font-bold ${tone}`}>
+    <Link href={href} className={`chip rounded-full px-3 py-1.5 ${tone}`}>
       {label}
     </Link>
   );
