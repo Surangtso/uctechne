@@ -2,6 +2,9 @@ import { ImageResponse } from "next/og";
 import { OG_MARK, OG_TAGLINE } from "./og-paths";
 
 export const OG_SIZE = { width: 1200, height: 630 };
+// Part of the image URL (/opengraph-image/<version>). KakaoTalk, Facebook and others remember a preview by its URL,
+// so raise this every time the picture changes, or they keep showing the old one.
+export const OG_VERSION = "v3";
 export const OG_TITLE = "uctechne";
 export const OG_DESCRIPTION = "Ride the wave first.";
 

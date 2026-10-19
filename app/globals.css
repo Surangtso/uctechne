@@ -20,10 +20,11 @@
   --color-tagline: var(--tagline);
   /* the selected 큐레이션 chip: the same teal in light and dark */
   --color-curated: #2aa7e0;
-  /* Latin letters and digits use Verdana. Verdana has no CJK, so Chinese characters come from Noto Sans SC
-     and Hangul (absent there) from Noto Sans KR. Geneva (Mac) and DejaVu Sans (Linux) stand in for Verdana. */
-  --font-sans: Verdana, Geneva, "DejaVu Sans", "Noto Sans SC Variable", "Noto Sans KR Variable", system-ui,
-    sans-serif;
+  /* Latin letters and digits use Verdana. Verdana has no CJK, so Chinese characters come from Noto Sans SC and
+     Hangul from Spoqa Han Sans Neo. Spoqa's web subset holds the 2,574 common syllables; a rare one falls back to
+     Noto Sans KR. Geneva (Mac) and DejaVu Sans (Linux) stand in for Verdana. */
+  --font-sans: Verdana, Geneva, "DejaVu Sans", "Noto Sans SC Variable", "Spoqa Han Sans Neo", "Noto Sans KR Variable",
+    system-ui, sans-serif;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -44,11 +45,12 @@ body {
   font-family: var(--font-sans);
 }
 
-/* Filter chips: a weight halfway between regular (400) and bold (700). Verdana only has those two weights,
-   so chip labels use the variable Noto fonts (SC first so Chinese keeps its glyph shapes, then KR for Hangul). */
+/* Filter chips: medium weight (500), between regular (400) and bold (700). Verdana only has those two weights, so
+   chip labels use Noto Sans SC (first, so Chinese keeps its glyph shapes) and Spoqa Han Sans Neo for Hangul.
+   Spoqa has no 550, so a weight above 500 would jump to bold. */
 .chip {
-  font-family: "Noto Sans SC Variable", "Noto Sans KR Variable", system-ui, sans-serif;
-  font-weight: 550;
+  font-family: "Noto Sans SC Variable", "Spoqa Han Sans Neo", "Noto Sans KR Variable", system-ui, sans-serif;
+  font-weight: 500;
 }
 /* chips whose label is plain English: Arimo (Arial-compatible, weight 400-700), Arial where it is missing */
 .chip.chip-latin {

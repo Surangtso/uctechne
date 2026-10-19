@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
 // Self-hosted from npm (unicode-range slices), so the build never fetches fonts from Google.
 // Hangul comes from the KR font; Chinese characters from the SC font. Verdana (Latin) is set in globals.css.
+// Spoqa Han Sans Neo (SIL OFL): the Hangul font. Its web subset covers the common syllables only.
+import "spoqa-han-sans/css/SpoqaHanSansNeo.css";
+// Noto Sans KR stays as the fallback for syllables outside that subset (loaded only when one appears)
 import "@fontsource-variable/noto-sans-kr";
 import "@fontsource-variable/noto-sans-sc";
 // Arial-compatible with a variable weight, for the English filter chips (Arial itself has no medium weight)
