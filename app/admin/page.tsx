@@ -5,6 +5,9 @@ import { listCurated } from "@/lib/store";
 import { login, logout } from "./actions";
 import { CurateForm, CuratedList } from "./curate-form";
 
+// the AI draft runs as a server action on this page; Opus can take longer than the default function limit
+export const maxDuration = 60;
+
 export const metadata: Metadata = {
   title: "관리",
   robots: { index: false, follow: false },

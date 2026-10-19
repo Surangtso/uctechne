@@ -91,6 +91,7 @@ export async function callJson<T extends { id: string }>(
   schema: object,
   payload: unknown[],
   wanted: Set<string>,
+  effort: "low" | "medium" | "high" = "low",
 ): Promise<{ results: T[]; usage: Usage }> {
   const res = await client.beta.messages.create({
     model,
@@ -98,7 +99,7 @@ export async function callJson<T extends { id: string }>(
     // haiku has no server-side fallback model; the others get one if a safeguard declines
     ...(model.includes("haiku") ? {} : { betas: ["server-side-fallback-2026-07-01"], fallbacks: "default" as const }),
     system,
-    output_config: { effort: "low", format: { type: "json_schema", schema: schema as Record<string, unknown> } },
+    output_config: { effort, format: { type: "json_schema", schema: schema as Record<string, unknown> } },
     messages: [{ role: "user", content: JSON.stringify(payload) }],
   });
 

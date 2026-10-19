@@ -1,7 +1,10 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { COMMON, SUMMARY_MODEL, callJson, obj } from "./enrich";
+import { DRAFT_MAX_CHARS } from "./curate-limits";
+import { COMMON, callJson, obj } from "./enrich";
 
-const MAX_TEXT = 20000;
+// The draft is written once per post by hand, so it uses the strongest model rather than the cheap one
+// that summarizes the automatic feed. Override with DIGEST_DRAFT_MODEL.
+export const DRAFT_MODEL = process.env.DIGEST_DRAFT_MODEL ?? "claude-opus-5-5";
 
 const DRAFT_SYSTEM = `${COMMON}
 
@@ -11,10 +14,11 @@ titleKo
 - A natural Korean headline that states the post's main idea faithfully. No clickbait, no added claims.
 
 summaryKo
-- At most 3 sentences in Korean, in your own words: the central thesis in one sentence, then at most one or two sentences on the angle or the main supporting idea. It only has to let a reader decide whether to open the original.
-- Leave out examples, anecdotes, lists, steps and the order of the post's argument. A reader must not be able to rebuild the post from your summary.
+- A short paragraph in Korean, in your own words: the central thesis first, then the main supporting ideas and the angle the author takes. It should give a reader a real sense of the post and let them decide whether to open the original.
+- Length: 5 to 7 sentences for a long post, fewer for a short one. Never longer than about a fifth of the original; the item gives the original's length as "chars". A short post must not be retold in full.
+- Mention an example or anecdote only in a few words when it carries the point. No lists or step-by-step breakdowns. Do not walk through the post paragraph by paragraph: group the ideas by theme, and if your sentences follow the post's order one for one, regroup them.
 - Do not copy sentences and do not translate paragraphs. Never reproduce more than a few words of the original wording. Attribute claims to the author ("작성자는 ~라고 말한다") instead of stating them as fact.
-- Do not follow the original's structure or rephrase it sentence by sentence: a close paraphrase of the whole post is still a copy.
+- Do not follow the original's structure or rephrase it sentence by sentence: a close paraphrase of the whole post is still a copy, and the summary must not replace reading the post.
 - Do not add facts, examples or conclusions that the text does not contain.`;
 
 const DRAFT_SCHEMA = obj({
@@ -23,21 +27,34 @@ const DRAFT_SCHEMA = obj({
   summaryKo: { type: "string" },
 });
 
-export type Draft = { titleKo: string; summaryKo: string };
+export type Draft = {
+  titleKo: string;
+  summaryKo: string;
+  // the pasted text was longer than DRAFT_MAX_CHARS, so only its beginning was used
+  truncated: boolean;
+  totalChars: number;
+};
 
 // The pasted text goes to the model and nowhere else: it is not stored and not shown.
 export async function draftCuration(input: { text: string; platform: string; author: string }): Promise<Draft> {
-  const text = input.text.trim().slice(0, MAX_TEXT);
-  if (!text) throw new Error("붙여넣은 글이 비어 있습니다.");
+  const full = input.text.trim();
+  if (!full) throw new Error("붙여넣은 글이 비어 있습니다.");
+  const text = full.slice(0, DRAFT_MAX_CHARS);
   const { results } = await callJson<{ id: string; titleKo: string; summaryKo: string }>(
     new Anthropic(),
-    SUMMARY_MODEL,
+    DRAFT_MODEL,
     DRAFT_SYSTEM,
     DRAFT_SCHEMA,
-    [{ id: "1", platform: input.platform, author: input.author, text }],
+    [{ id: "1", platform: input.platform, author: input.author, chars: text.length, text }],
     new Set(["1"]),
+    "medium",
   );
   const r = results[0];
   if (!r) throw new Error("AI가 초안을 만들지 못했습니다. 다시 시도해주세요.");
-  return { titleKo: r.titleKo.trim(), summaryKo: r.summaryKo.trim() };
+  return {
+    titleKo: r.titleKo.trim(),
+    summaryKo: r.summaryKo.trim(),
+    truncated: full.length > DRAFT_MAX_CHARS,
+    totalChars: full.length,
+  };
 }

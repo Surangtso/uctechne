@@ -2,6 +2,7 @@
 
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { DRAFT_MAX_CHARS } from "@/lib/curate-limits";
 import type { Article } from "@/lib/types";
 import { deleteAction, draftAction, publishAction } from "./actions";
 
@@ -24,6 +25,9 @@ export function CurateForm() {
   const [message, setMessage] = useState<{ kind: "ok" | "error"; text: string } | null>(null);
   const [drafting, startDraft] = useTransition();
   const [publishing, startPublish] = useTransition();
+  // characters of the pasted text beyond what the AI draft will read (same trim and limit as the server)
+  const pasted = text.trim().length;
+  const cutOff = Math.max(0, pasted - DRAFT_MAX_CHARS);
 
   function draft() {
     setMessage(null);
@@ -32,7 +36,12 @@ export function CurateForm() {
       if (!res.ok) return setMessage({ kind: "error", text: res.error });
       setTitleKo(res.data.titleKo);
       setSummaryKo(res.data.summaryKo);
-      setMessage({ kind: "ok", text: "초안을 채웠습니다. 읽어보고 고쳐서 게시하세요." });
+      setMessage({
+        kind: "ok",
+        text: res.data.truncated
+          ? `초안을 채웠습니다. 글이 길어서 앞 ${DRAFT_MAX_CHARS.toLocaleString()}자만 반영됐으니, 뒷부분 내용은 직접 확인하세요.`
+          : "초안을 채웠습니다. 읽어보고 고쳐서 게시하세요.",
+      });
     });
   }
 
@@ -90,6 +99,11 @@ export function CurateForm() {
       <div>
         <label className={label}>원문 붙여넣기 (AI 초안 전용, 저장·공개 안 됨)</label>
         <textarea className={`${input} h-40`} value={text} onChange={(e) => setText(e.target.value)} />
+        <p className={`mt-1 text-[11px] ${cutOff > 0 ? "text-red-600" : "text-muted"}`}>
+          {pasted.toLocaleString()}자
+          {cutOff > 0 &&
+            ` · 글이 길어서 앞 ${DRAFT_MAX_CHARS.toLocaleString()}자만 AI 초안에 쓰이고, 뒤 ${cutOff.toLocaleString()}자는 제외됩니다.`}
+        </p>
         <button
           type="button"
           onClick={draft}
@@ -105,8 +119,8 @@ export function CurateForm() {
         <input className={input} value={titleKo} onChange={(e) => setTitleKo(e.target.value)} />
       </div>
       <div>
-        <label className={label}>요약 (본인 말로, 2~4문장)</label>
-        <textarea className={`${input} h-28`} value={summaryKo} onChange={(e) => setSummaryKo(e.target.value)} />
+        <label className={label}>요약 (본인 말로, 5~7문장 안팎)</label>
+        <textarea className={`${input} h-44`} value={summaryKo} onChange={(e) => setSummaryKo(e.target.value)} />
       </div>
       <div>
         <label className={label}>인용 (선택, 한두 문장)</label>
