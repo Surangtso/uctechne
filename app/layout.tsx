@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   // absolute base for the share-preview image URLs; change it when the site gets its own domain
   metadataBase: new URL("https://uctechne.vercel.app"),
   title: "uctechne",
-  description: "미국·중국 테크 미디어 기사를 한 곳에서 확인할 수 있습니다.",
+  description: "미국·중국 테크 미디어 기사를 한 곳에서 볼 수 있습니다.",
   // what link previews (KakaoTalk, Facebook, Slack, ...) show; the image is app/opengraph-image.tsx
   openGraph: {
     type: "website",

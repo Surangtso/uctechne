@@ -184,6 +184,8 @@ export async function saveEnrichment(a: Article): Promise<void> {
 
 // articles for the feed: only ones the AI step has classified as tech, newest first.
 // Unprocessed rows stay out, so an untranslated title never shows while it waits for the next update.
+// Without a sourceId (the 전체 view) only outlet articles are listed; hand-curated posts appear only when
+// asked for with sourceId "curated" (the 큐레이션 button).
 export async function listPublic(opts: { sourceId?: string; limit: number }): Promise<Article[]> {
   let q = db()
     .from(TABLE)
@@ -191,7 +193,7 @@ export async function listPublic(opts: { sourceId?: string; limit: number }): Pr
     .eq("is_tech", true)
     .order("sort_at", { ascending: false })
     .limit(opts.limit);
-  if (opts.sourceId) q = q.eq("source_id", opts.sourceId);
+  q = opts.sourceId ? q.eq("source_id", opts.sourceId) : q.eq("curated", false);
   const rows = check(await q, "read feed") as unknown as Parameters<typeof fromRow>[0][];
   return rows.map(fromRow);
 }
