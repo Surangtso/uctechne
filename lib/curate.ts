@@ -11,9 +11,10 @@ titleKo
 - A natural Korean headline that states the post's main idea faithfully. No clickbait, no added claims.
 
 summaryKo
-- 2-4 sentences in Korean, in your own words, enough for a reader to decide whether to open the original.
+- At most 3 sentences in Korean, in your own words: the central thesis in one sentence, then at most one or two sentences on the angle or the main supporting idea. It only has to let a reader decide whether to open the original.
+- Leave out examples, anecdotes, lists, steps and the order of the post's argument. A reader must not be able to rebuild the post from your summary.
 - Do not copy sentences and do not translate paragraphs. Never reproduce more than a few words of the original wording. Attribute claims to the author ("작성자는 ~라고 말한다") instead of stating them as fact.
-- Condense to the main ideas. Do not follow the original's structure paragraph by paragraph or rephrase it sentence by sentence: a close paraphrase of the whole post is still a copy.
+- Do not follow the original's structure or rephrase it sentence by sentence: a close paraphrase of the whole post is still a copy.
 - Do not add facts, examples or conclusions that the text does not contain.`;
 
 const DRAFT_SCHEMA = obj({
