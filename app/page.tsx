@@ -57,7 +57,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             const comment = a.commentManual ?? a.commentKo;
             const title = a.titleKo ?? a.titleOriginal;
             return (
-              <li key={a.id} className="flex flex-col rounded-xl border border-line bg-card p-5">
+              <li key={a.id} className="flex flex-col rounded-xl bg-card p-5">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted">
                   <span>{src ? `${src.name} · ${REGION[src.lang]}` : a.sourceId}</span>
                   <span>·</span>
@@ -69,7 +69,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                     {title}
                   </a>
                 </h2>
-                {a.titleKo && <p className="mt-1 text-xs text-muted">{a.titleOriginal}</p>}
+                {a.titleKo && <p className="mt-1 text-[11px] leading-snug text-muted">{a.titleOriginal}</p>}
                 {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed">{a.summaryKo}</p>}
                 {comment && (
                   <p className="mt-3 border-l-2 border-accent pl-3 text-sm leading-relaxed text-muted">{comment}</p>
