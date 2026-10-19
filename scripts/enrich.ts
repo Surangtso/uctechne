@@ -1,6 +1,17 @@
 import Anthropic from "@anthropic-ai/sdk";
-import { BATCH_SIZE, MODEL, applyResult, enrichBatch } from "../lib/enrich";
+import {
+  BATCH_SIZE,
+  SUMMARY_MODEL,
+  TRANSLATE_MODEL,
+  applySummary,
+  applyTranslation,
+  needsSummary,
+  summarizeBatch,
+  translateBatch,
+  type Usage,
+} from "../lib/enrich";
 import { loadArticles, saveArticles } from "../lib/store";
+import type { Article } from "../lib/types";
 
 const CONCURRENCY = 3;
 
@@ -14,52 +25,60 @@ async function main() {
   const limit = limitArg ? Number(limitArg.split("=")[1]) : Infinity;
 
   const articles = await loadArticles();
-  // newest first, so a limited run covers what readers see first
-  const todo = articles.filter((a) => !a.processedAt).slice(0, limit);
-  if (todo.length === 0) {
-    console.log("nothing to process");
-    return;
-  }
-
-  const batches: (typeof todo)[] = [];
-  for (let i = 0; i < todo.length; i += BATCH_SIZE) batches.push(todo.slice(i, i + BATCH_SIZE));
-  console.log(`${todo.length} articles in ${batches.length} batches, model ${MODEL}`);
-
-  const client = new Anthropic();
   const byId = new Map(articles.map((a) => [a.id, a]));
-  const total = { input: 0, output: 0 };
-  let done = 0;
-  let failed = 0;
+  const client = new Anthropic();
+
   // batches finish out of order; serialize file writes so they never interleave
   let saving: Promise<void> = Promise.resolve();
   const save = () => (saving = saving.then(() => saveArticles(articles)));
 
-  let next = 0;
-  async function worker() {
-    while (next < batches.length) {
-      const batch = batches[next++];
-      try {
-        const { results, usage } = await enrichBatch(client, batch);
-        for (const r of results) {
-          const a = byId.get(r.id);
-          if (a) applyResult(a, r);
+  async function phase<R extends { id: string }>(
+    label: string,
+    model: string,
+    todo: Article[],
+    run: (batch: Article[]) => Promise<{ results: R[]; usage: Usage }>,
+    apply: (a: Article, r: R) => void,
+  ) {
+    if (todo.length === 0) {
+      console.log(`${label}: nothing to do`);
+      return;
+    }
+    const batches: Article[][] = [];
+    for (let i = 0; i < todo.length; i += BATCH_SIZE) batches.push(todo.slice(i, i + BATCH_SIZE));
+    console.log(`${label}: ${todo.length} articles in ${batches.length} batches, model ${model}`);
+
+    const total = { input: 0, output: 0 };
+    let done = 0;
+    let failed = 0;
+    let next = 0;
+    async function worker() {
+      while (next < batches.length) {
+        const batch = batches[next++];
+        try {
+          const { results, usage } = await run(batch);
+          for (const r of results) {
+            const a = byId.get(r.id);
+            if (a) apply(a, r);
+          }
+          total.input += usage.input;
+          total.output += usage.output;
+          done += results.length;
+          if (results.length < batch.length) console.warn(`  batch returned ${results.length}/${batch.length}; rest retried next run`);
+          await save();
+        } catch (e) {
+          failed += batch.length;
+          console.error(`  batch failed: ${e instanceof Error ? e.message : e}`);
         }
-        total.input += usage.input;
-        total.output += usage.output;
-        done += results.length;
-        if (results.length < batch.length) console.warn(`  batch returned ${results.length}/${batch.length}; rest retried next run`);
-        await save();
-      } catch (e) {
-        failed += batch.length;
-        console.error(`  batch failed: ${e instanceof Error ? e.message : e}`);
       }
     }
+    await Promise.all(Array.from({ length: CONCURRENCY }, worker));
+    console.log(`  ${done} done, ${failed} failed, tokens ${total.input} in / ${total.output} out`);
   }
-  await Promise.all(Array.from({ length: CONCURRENCY }, worker));
-  await saving;
 
-  console.log(`\n${done} processed, ${failed} failed`);
-  console.log(`tokens: ${total.input} in / ${total.output} out`);
+  // newest first, so a limited run covers what readers see first
+  await phase("translate", TRANSLATE_MODEL, articles.filter((a) => !a.processedAt).slice(0, limit), (b) => translateBatch(client, b), applyTranslation);
+  await phase("summarize", SUMMARY_MODEL, articles.filter(needsSummary), (b) => summarizeBatch(client, b), applySummary);
+  await saving;
 }
 
 main();

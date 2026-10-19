@@ -10,8 +10,9 @@ export type Article = {
   // short plain-text snippet of the original, used only as AI input, never shown
   excerpt: string;
   paywalled: boolean;
-  // filled by the AI step; processedAt marks articles it has already looked at
+  // filled by the AI steps; processedAt = translated/classified, summarizedAt = summary + comment done
   processedAt?: string;
+  summarizedAt?: string;
   titleKo?: string;
   summaryKo?: string;
   commentKo?: string;
