@@ -8,7 +8,7 @@ import "@fontsource-variable/arimo";
 import "./globals.css";
 
 const PREVIEW_TITLE = "uctechne";
-const PREVIEW_DESCRIPTION = "기술의 큰 흐름에 가장 먼저 올라타기";
+const PREVIEW_DESCRIPTION = "Ride the wave first.";
 
 export const metadata: Metadata = {
   // absolute base for the share-preview image URLs; change it when the site gets its own domain
