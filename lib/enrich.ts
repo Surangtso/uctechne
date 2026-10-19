@@ -151,6 +151,3 @@ export function applySummary(article: Article, r: SummaryResult): void {
   article.summaryKo = clean(r.summaryKo);
   article.commentKo = clean(r.commentKo);
 }
-
-// stage 2 candidates: tech articles whose excerpt gives something to summarize
-export const needsSummary = (a: Article) => a.isTech === true && !!a.titleKo && !!a.excerpt && !a.summarizedAt;

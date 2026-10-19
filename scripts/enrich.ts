@@ -5,12 +5,11 @@ import {
   TRANSLATE_MODEL,
   applySummary,
   applyTranslation,
-  needsSummary,
   summarizeBatch,
   translateBatch,
   type Usage,
 } from "../lib/enrich";
-import { loadArticles, saveArticles } from "../lib/store";
+import { pendingSummary, pendingTranslation, saveEnrichment } from "../lib/store";
 import type { Article } from "../lib/types";
 
 const CONCURRENCY = 3;
@@ -23,14 +22,7 @@ async function main() {
 
   const limitArg = process.argv.find((a) => a.startsWith("--limit="));
   const limit = limitArg ? Number(limitArg.split("=")[1]) : Infinity;
-
-  const articles = await loadArticles();
-  const byId = new Map(articles.map((a) => [a.id, a]));
   const client = new Anthropic();
-
-  // batches finish out of order; serialize file writes so they never interleave
-  let saving: Promise<void> = Promise.resolve();
-  const save = () => (saving = saving.then(() => saveArticles(articles)));
 
   async function phase<R extends { id: string }>(
     label: string,
@@ -47,6 +39,7 @@ async function main() {
     for (let i = 0; i < todo.length; i += BATCH_SIZE) batches.push(todo.slice(i, i + BATCH_SIZE));
     console.log(`${label}: ${todo.length} articles in ${batches.length} batches, model ${model}`);
 
+    const byId = new Map(todo.map((a) => [a.id, a]));
     const total = { input: 0, output: 0 };
     let done = 0;
     let failed = 0;
@@ -56,15 +49,19 @@ async function main() {
         const batch = batches[next++];
         try {
           const { results, usage } = await run(batch);
-          for (const r of results) {
-            const a = byId.get(r.id);
-            if (a) apply(a, r);
-          }
+          // saved per batch, so a crash later loses nothing that was already paid for
+          await Promise.all(
+            results.map(async (r) => {
+              const a = byId.get(r.id);
+              if (!a) return;
+              apply(a, r);
+              await saveEnrichment(a);
+            }),
+          );
           total.input += usage.input;
           total.output += usage.output;
           done += results.length;
           if (results.length < batch.length) console.warn(`  batch returned ${results.length}/${batch.length}; rest retried next run`);
-          await save();
         } catch (e) {
           failed += batch.length;
           console.error(`  batch failed: ${e instanceof Error ? e.message : e}`);
@@ -76,9 +73,11 @@ async function main() {
   }
 
   // newest first, so a limited run covers what readers see first
-  await phase("translate", TRANSLATE_MODEL, articles.filter((a) => !a.processedAt).slice(0, limit), (b) => translateBatch(client, b), applyTranslation);
-  await phase("summarize", SUMMARY_MODEL, articles.filter(needsSummary), (b) => summarizeBatch(client, b), applySummary);
-  await saving;
+  await phase("translate", TRANSLATE_MODEL, await pendingTranslation(limit), (b) => translateBatch(client, b), applyTranslation);
+  await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummary);
 }
 
-main();
+main().catch((e) => {
+  console.error(e instanceof Error ? e.message : e);
+  process.exit(1);
+});

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { timeAgo } from "@/lib/format";
 import { SOURCES } from "@/lib/sources";
-import { loadArticles } from "@/lib/store";
+import { listPublic } from "@/lib/store";
 
 const PAGE_SIZE = 60;
 const FLAG = { en: "🇺🇸", zh: "🇨🇳" } as const;
@@ -14,10 +14,8 @@ export default async function Home({
   const { source } = await searchParams;
   const active = SOURCES.find((s) => s.id === source);
 
-  const all = await loadArticles();
-  // articles the AI step has not looked at yet (isTech undefined) stay visible
-  const visible = all.filter((a) => a.isTech !== false && (!active || a.sourceId === active.id));
-  const articles = visible.slice(0, PAGE_SIZE);
+  // articles the AI step has not looked at yet stay visible; non-tech ones are filtered out in the query
+  const articles = await listPublic({ sourceId: active?.id, limit: PAGE_SIZE });
   const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
 
   return (
