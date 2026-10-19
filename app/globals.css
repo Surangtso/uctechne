@@ -41,3 +41,62 @@ body {
   color: var(--foreground);
   font-family: var(--font-sans);
 }
+
+/* News cards: the comment and the "원문 보기" link slide open under the card on hover.
+   The panel is absolutely positioned, so opening it never moves the cards around it.
+   Touch screens cannot hover, so there the panel is simply always shown. */
+.news-more {
+  margin-top: 0.75rem;
+}
+
+@media (hover: hover) {
+  .news-card {
+    position: relative;
+    transition: border-radius 0.2s ease, filter 0.25s ease;
+  }
+  .news-more {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    margin-top: 0;
+    z-index: 20;
+    display: grid;
+    grid-template-rows: 0fr;
+    visibility: hidden;
+    background: var(--card);
+    border-radius: 0 0 0.75rem 0.75rem;
+    transition:
+      grid-template-rows 0.25s ease,
+      visibility 0s linear 0.25s;
+  }
+  .news-more-inner {
+    overflow: hidden;
+    min-height: 0;
+    padding: 0 1.25rem;
+  }
+  .news-more-inner > :last-child {
+    margin-bottom: 1.25rem;
+  }
+  .news-card:hover,
+  .news-card:focus-within {
+    z-index: 20;
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+    /* a filter shadow covers the card and its panel as one shape, so no seam shows between them */
+    filter: drop-shadow(0 10px 18px rgb(0 0 0 / 0.14));
+  }
+  .news-card:hover .news-more,
+  .news-card:focus-within .news-more {
+    grid-template-rows: 1fr;
+    visibility: visible;
+    transition: grid-template-rows 0.25s ease;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .news-card,
+  .news-more {
+    transition: none !important;
+  }
+}

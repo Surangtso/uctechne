@@ -76,7 +76,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                 ? `${src.name} · ${REGION[src.lang]}`
                 : a.sourceId;
             return (
-              <li key={a.id} className="flex flex-col rounded-xl bg-card p-5">
+              <li key={a.id} className="news-card rounded-xl bg-card p-5">
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted">
                   {a.curated && <span className="rounded bg-accent px-1.5 py-0.5 text-background">큐레이션</span>}
                   <span>{where}</span>
@@ -92,19 +92,24 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                 {a.titleKo && a.titleOriginal && (
                   <p className="mt-1 text-[11px] leading-snug text-muted">{a.titleOriginal}</p>
                 )}
-                {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed">{a.summaryKo}</p>}
-                {a.quote && <p className="mt-3 text-sm italic leading-relaxed text-muted">“{a.quote}”</p>}
-                {comment && (
-                  <p className="mt-3 border-l-2 border-accent pl-3 text-sm leading-relaxed text-muted">{comment}</p>
-                )}
-                <a
-                  href={a.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="mt-auto inline-block self-start pt-4 text-sm text-accent hover:underline"
-                >
-                  원문 보기 ↗
-                </a>
+                {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed text-muted">{a.summaryKo}</p>}
+                {/* hidden until the card is hovered or focused; always visible on touch screens (see globals.css) */}
+                <div className="news-more">
+                  <div className="news-more-inner">
+                    {comment && (
+                      <p className="border-l-2 border-accent pl-3 text-sm leading-relaxed text-foreground">{comment}</p>
+                    )}
+                    {a.quote && <p className="mt-3 text-sm italic leading-relaxed text-muted">“{a.quote}”</p>}
+                    <a
+                      href={a.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="mt-4 inline-block text-sm text-accent hover:underline"
+                    >
+                      원문 보기 ↗
+                    </a>
+                  </div>
+                </div>
               </li>
             );
           })}
