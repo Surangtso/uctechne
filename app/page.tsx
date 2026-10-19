@@ -114,8 +114,8 @@ function Chip({ href, label, on }: { href: string; label: string; on: boolean })
   return (
     <Link
       href={href}
-      className={`rounded-full border px-3 py-1 ${
-        on ? "border-accent bg-accent text-background" : "border-line text-muted hover:text-foreground"
+      className={`rounded-full px-3 py-1.5 ${
+        on ? "bg-accent text-background" : "bg-card text-muted hover:text-foreground"
       }`}
     >
       {label}
