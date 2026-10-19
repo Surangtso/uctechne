@@ -25,8 +25,8 @@ importance (integer 1-5)
 - 5: shifts the industry or a major company's direction. 3: notable. 1: minor or incremental.
 
 propaganda
-- true when the item itself is Chinese Communist Party or PRC state messaging: leader speeches and instructions, slogans, party-congress or ideological campaigns, and state-media style achievement claims that praise the party or government without independent reporting. If this is the main content of the item, the digest leaves it out.
-- false for independent reporting or analysis about the party, the government or its policies, including regulation, export controls, subsidies and official statistics reported as facts. Coverage about China is not propaganda; only content that itself promotes the party line is.
+- true when the main content of the item is either (a) Chinese Communist Party or PRC state messaging: leader speeches and instructions, slogans, party-congress or ideological campaigns, state-media style achievement claims that praise the party or government; or (b) a plain relay of an official announcement by a party or government body that adds no independent reporting, analysis or industry reaction: policy documents and "guiding opinions" (e.g. "9部门: encourage ..."), ministry or agency press conferences, official statistics releases. An excerpt that credits state media (央视新闻, 新华社, 新华财经, 人民日报, 中新网) is a strong signal for (a) or (b); judge the content, since state media also report ordinary company news. The digest leaves such items out.
+- false for independent reporting or analysis about the party, the government or its policies, and for business news about concrete actions that directly affect companies (export controls, bans, fines, licensing, investigations) reported as news. Also false for roundups or briefings where an official announcement is only one item among many. Coverage about China is not propaganda; only content that itself carries the party line, or merely repeats an official announcement, is.
 - Always false for items that have nothing to do with the Chinese party-state.
 
 titleKo
