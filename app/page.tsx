@@ -1,5 +1,6 @@
 import { Suspense } from "react";
 import Link from "next/link";
+import { dealIntoColumns } from "@/lib/columns";
 import { getFeed } from "@/lib/feed";
 import { timeAgo } from "@/lib/format";
 import { needsLogin } from "@/lib/platforms";
@@ -70,6 +71,10 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
   const activeId = source === CURATED ? CURATED : active?.id;
   // only articles the AI step has classified as tech are listed (see listPublic)
   const articles = await getFeed(activeId, PAGE_SIZE);
+  const {
+    columns: [left, right],
+  } = dealIntoColumns(articles);
+  const firstOnRight = right[0]?.article.id;
 
   return (
     <>
@@ -77,8 +82,11 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
       {articles.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted">표시할 기사가 없습니다.</p>
       ) : (
-        <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
-          {articles.map((a) => {
+        // One column on a phone (flex, restored to newest-first with `order`). From md up, two newspaper-style
+        // columns (CSS columns): cards keep their own height, so a short card leaves no blank space. The DOM holds
+        // the left column then the right one, and the first card of the right one forces the column break.
+        <ul className="flex flex-col gap-4 md:block md:columns-2 md:gap-4">
+          {[...left, ...right].map(({ article: a, order }) => {
             const src = sourceOf.get(a.sourceId);
             const comment = a.commentManual ?? a.commentKo;
             const title = a.titleKo ?? a.titleOriginal;
@@ -86,7 +94,13 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             const outlet = a.curated ? (a.sourceLabel ?? "큐레이션") : (src?.name ?? a.sourceId);
             const outletNote = a.curated ? a.author : src ? REGION[src.lang] : undefined;
             return (
-              <li key={a.id} className="news-card rounded-xl bg-card p-5">
+              <li
+                key={a.id}
+                style={{ order }}
+                className={`news-card rounded-xl bg-card p-5 md:mb-4 md:break-inside-avoid ${
+                  a.id === firstOnRight ? "md:[break-before:column]" : ""
+                }`}
+              >
                 <div className="mb-2 flex items-center gap-2 text-xs text-muted">
                   {a.curated && <span className="rounded bg-accent px-1.5 py-0.5 text-background">큐레이션</span>}
                   <span>
