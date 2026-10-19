@@ -1,0 +1,31 @@
+name: Update articles
+
+on:
+  schedule:
+    # every 3 hours (UTC); minute 17 avoids the top-of-hour rush that delays scheduled runs
+    - cron: "17 */3 * * *"
+  workflow_dispatch:
+
+# a slow run must never overlap the next one
+concurrency:
+  group: update-articles
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      # a second try covers a rare dropped connection; the job is safe to repeat (done articles are skipped)
+      - name: Collect, translate and summarize
+        run: npm run update || npm run update
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
