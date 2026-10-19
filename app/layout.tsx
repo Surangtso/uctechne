@@ -1,19 +1,9 @@
 import type { Metadata } from "next";
-import { Noto_Sans_KR, Noto_Sans_SC } from "next/font/google";
+// Self-hosted from npm (unicode-range slices), so the build never fetches fonts from Google.
+// Hangul comes from the KR font; Chinese characters from the SC font. Verdana (Latin) is set in globals.css.
+import "@fontsource-variable/noto-sans-kr";
+import "@fontsource-variable/noto-sans-sc";
 import "./globals.css";
-
-const notoSansKr = Noto_Sans_KR({
-  variable: "--font-noto-sans-kr",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
-
-// simplified Chinese (titles from 36Kr, TMTPost, Huxiu); Hangul is not in this font and falls through to Noto Sans KR
-const notoSansSc = Noto_Sans_SC({
-  variable: "--font-noto-sans-sc",
-  subsets: ["latin"],
-  weight: ["400", "500", "700"],
-});
 
 export const metadata: Metadata = {
   title: "US & China Tech News",
@@ -26,7 +16,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ko" className={`${notoSansKr.variable} ${notoSansSc.variable} h-full antialiased`}>
+    <html lang="ko" className="h-full antialiased">
       <body className="min-h-full flex flex-col">{children}</body>
     </html>
   );
