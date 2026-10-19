@@ -1,6 +1,5 @@
 import { ImageResponse } from "next/og";
-import { LOGO_STOPS } from "./logo";
-import { LOGO_C, LOGO_U } from "./logo-paths";
+import { logoShapes } from "./logo";
 import { OG_DESC, OG_WORDMARK } from "./og-paths";
 
 export const OG_SIZE = { width: 1200, height: 630 };
@@ -28,18 +27,8 @@ export function ogImage() {
     (
       <div style={{ display: "flex", width: "100%", height: "100%" }}>
         <svg width={OG_SIZE.width} height={OG_SIZE.height} viewBox={`0 0 ${OG_SIZE.width} ${OG_SIZE.height}`} xmlns="http://www.w3.org/2000/svg">
-          <defs>
-            <linearGradient id="uc" gradientUnits="userSpaceOnUse" x1="7" y1="7" x2="93" y2="93">
-              {LOGO_STOPS.map((s) => (
-                <stop key={s.offset} offset={s.offset} stopColor={s.color} />
-              ))}
-            </linearGradient>
-          </defs>
           <rect width={OG_SIZE.width} height={OG_SIZE.height} fill={BACKGROUND} />
-          <g transform={`translate(${logoX} ${(OG_SIZE.height - LOGO) / 2}) scale(${LOGO / 100})`}>
-            <path d={LOGO_U} fill="url(#uc)" />
-            <path d={LOGO_C} fill="url(#uc)" />
-          </g>
+          <g transform={`translate(${logoX} ${(OG_SIZE.height - LOGO) / 2}) scale(${LOGO / 100})`}>{logoShapes()}</g>
           <g transform={`translate(${textX} ${titleBaseline})`}>
             <path d={OG_WORDMARK.d} fill={TITLE_COLOR} />
           </g>

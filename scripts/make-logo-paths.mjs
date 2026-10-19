@@ -6,8 +6,8 @@ import opentype from "opentype.js";
 
 const FONT = "C:/Windows/Fonts/verdanaz.ttf"; // Verdana Bold Italic
 const SIZE = 100; // outline resolution only
-const CAP = 40; // height of each letter in the 100 x 100 logo box
-const MARGIN = 7;
+const CAP = 49; // height of each letter in the 100 x 100 logo box; big enough that U and C overlap a little
+const MARGIN = 5;
 
 const buf = readFileSync(FONT);
 const font = opentype.parse(buf.buffer.slice(buf.byteOffset, buf.byteOffset + buf.byteLength));
