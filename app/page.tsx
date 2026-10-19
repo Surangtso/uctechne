@@ -124,20 +124,20 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
 
 function Nav({ activeId }: { activeId?: string }) {
   return (
-    <nav className="mb-6 space-y-2 text-sm">
-      <div className="flex items-center gap-2">
-        <span className="w-8" />
-        <Chip href="/" label="전체" on={!activeId} />
-        <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} />
-      </div>
+    // one row: US outlets, CN outlets, 전체, and 큐레이션 pushed to the far right (rows wrap on narrow screens)
+    <nav className="mb-6 flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
       {(["en", "zh"] as const).map((lang) => (
         <div key={lang} className="flex flex-wrap items-center gap-2">
-          <span className="w-8 text-[11px] font-medium tracking-wide text-muted">{lang === "en" ? "US" : "CN"}</span>
+          <span className="text-[11px] font-medium tracking-wide text-muted">{lang === "en" ? "US" : "CN"}</span>
           {SOURCES.filter((s) => s.lang === lang).map((s) => (
             <Chip key={s.id} href={`/?source=${s.id}`} label={s.name} on={activeId === s.id} />
           ))}
         </div>
       ))}
+      <Chip href="/" label="전체" on={!activeId} />
+      <div className="ml-auto">
+        <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} />
+      </div>
     </nav>
   );
 }
