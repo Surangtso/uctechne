@@ -10,7 +10,8 @@ async function main() {
   }
   const { added, total } = await mergeItems(items);
   console.log(`\n${added.length} new, ${total} stored`);
-  if (reports.some((r) => !r.ok)) process.exitCode = 1;
+  // one flaky source must not block the AI step in `npm run update`; only fail when nothing worked
+  if (reports.every((r) => !r.ok)) process.exitCode = 1;
 }
 
 main();
