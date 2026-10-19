@@ -3,10 +3,10 @@
 import { useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { DRAFT_MAX_CHARS } from "@/lib/curate-limits";
+import { PLATFORMS } from "@/lib/platforms";
 import type { Article } from "@/lib/types";
 import { deleteAction, draftAction, publishAction } from "./actions";
 
-const PLATFORMS = ["知乎", "X (Twitter)", "위챗 공식계정", "블로그", "뉴스레터", "기타"];
 const input = "w-full rounded-lg bg-card px-3 py-2 text-sm outline-none ring-1 ring-line focus:ring-accent";
 const label = "mb-1 block text-xs font-medium text-muted";
 const button = "rounded-full px-4 py-2 text-sm font-medium disabled:opacity-50";

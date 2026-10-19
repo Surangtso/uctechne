@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { getFeed } from "@/lib/feed";
 import { timeAgo } from "@/lib/format";
+import { needsLogin } from "@/lib/platforms";
 import { SOURCES } from "@/lib/sources";
 
 const PAGE_SIZE = 60;
@@ -114,14 +115,19 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                   <div className="news-more-inner">
                     {a.summaryKo && <p className="text-[15px] leading-relaxed text-muted">{a.summaryKo}</p>}
                     {a.quote && <p className="mt-3 text-sm italic leading-relaxed text-muted">“{a.quote}”</p>}
-                    <a
-                      href={a.url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="mt-4 inline-block text-sm text-accent hover:underline"
-                    >
-                      원문 보기 ↗
-                    </a>
+                    <div className="mt-4 flex flex-wrap items-baseline gap-x-2">
+                      <a
+                        href={a.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-sm text-accent hover:underline"
+                      >
+                        원문 보기 ↗
+                      </a>
+                      {a.curated && needsLogin(a.sourceLabel) && (
+                        <span className="text-xs text-muted">로그인이 필요할 수 있어요</span>
+                      )}
+                    </div>
                   </div>
                 </div>
               </li>
