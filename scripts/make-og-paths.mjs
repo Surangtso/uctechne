@@ -1,11 +1,11 @@
 // One-off: draws the share-preview texts as vector outlines and writes lib/og-paths.ts.
-//   wordmark "UCtechne": Verdana Bold, from this Windows machine's installed font (outlines only are committed)
+//   wordmark "uctechne": Verdana Bold, from this Windows machine's installed font (outlines only are committed)
 //   description: Noto Sans KR Bold (SIL OFL), taken from the @fontsource/noto-sans-kr slice that holds each glyph
 // Run:  node scripts/make-og-paths.mjs
 import { readFileSync, writeFileSync } from "node:fs";
 import opentype from "opentype.js";
 
-const WORDMARK = "UCtechne";
+const WORDMARK = "uctechne";
 const WORDMARK_WIDTH = 560; // px in the 1200 x 630 image
 const DESC_LINES = ["기술의 큰 흐름에", "가장 먼저 올라타기"];
 const DESC_SIZE = 54; // previews are often shown small, so the description is not tiny
@@ -20,7 +20,8 @@ const verdana = parse("C:/Windows/Fonts/verdanab.ttf"); // Verdana Bold
 const adv100 = verdana.getAdvanceWidth(WORDMARK, 100);
 const wmSize = (WORDMARK_WIDTH / adv100) * 100;
 const wmPath = verdana.getPath(WORDMARK, 0, 0, wmSize);
-const wmCap = -verdana.getPath("U", 0, 0, wmSize).getBoundingBox().y1;
+// height above the baseline: lowercase has no capital, so the ascender of "h" and "t" sets the top
+const wmCap = -verdana.getPath("h", 0, 0, wmSize).getBoundingBox().y1;
 const wmWidth = verdana.getAdvanceWidth(WORDMARK, wmSize);
 
 // --- description: find the font slice that covers each character

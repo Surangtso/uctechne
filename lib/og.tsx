@@ -4,7 +4,7 @@ import { LOGO_C, LOGO_U } from "./logo-paths";
 import { OG_DESC, OG_WORDMARK } from "./og-paths";
 
 export const OG_SIZE = { width: 1200, height: 630 };
-export const OG_TITLE = "UCtechne";
+export const OG_TITLE = "uctechne";
 export const OG_DESCRIPTION = "기술의 큰 흐름에 가장 먼저 올라타기";
 
 const BACKGROUND = "#ebf3fc"; // light sky blue

@@ -19,7 +19,7 @@ export default function Home({
   return (
     <div className="mx-auto w-full max-w-6xl px-4 py-8 sm:px-6 sm:py-10">
       <header className="mb-8">
-        <h1 className="text-2xl font-bold tracking-tight">US &amp; China Tech News</h1>
+        <h1 className="text-2xl font-bold tracking-tight">uctechne</h1>
         <p className="mt-2 text-sm text-tagline">
           미국·중국 테크 미디어 기사를 한 곳에서 확인할 수 있습니다. 본문은 원문 링크에서 확인할 수 있습니다.
         </p>

@@ -7,13 +7,13 @@ import "@fontsource-variable/noto-sans-sc";
 import "@fontsource-variable/arimo";
 import "./globals.css";
 
-const PREVIEW_TITLE = "UCtechne";
+const PREVIEW_TITLE = "uctechne";
 const PREVIEW_DESCRIPTION = "기술의 큰 흐름에 가장 먼저 올라타기";
 
 export const metadata: Metadata = {
   // absolute base for the share-preview image URLs; change it when the site gets its own domain
   metadataBase: new URL("https://uctechne.vercel.app"),
-  title: "US & China Tech News",
+  title: "uctechne",
   description: "미국·중국 테크 미디어 기사를 한 곳에서 확인할 수 있습니다.",
   // what link previews (KakaoTalk, Facebook, Slack, ...) show; the image is app/opengraph-image.tsx
   openGraph: {
