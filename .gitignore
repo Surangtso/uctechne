@@ -43,3 +43,6 @@ next-env.d.ts
 
 # collected data (swap for DB when deploying)
 /data/
+
+# scratch scripts for one-off checks
+/scripts/_*.ts

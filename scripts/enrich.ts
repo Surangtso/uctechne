@@ -73,7 +73,16 @@ async function main() {
   }
 
   // newest first, so a limited run covers what readers see first
-  await phase("translate", TRANSLATE_MODEL, await pendingTranslation(limit), (b) => translateBatch(client, b), applyTranslation);
+  await phase(
+    "translate",
+    TRANSLATE_MODEL,
+    await pendingTranslation(limit),
+    (b) => translateBatch(client, b),
+    (a, r) => {
+      applyTranslation(a, r);
+      if (r.propaganda) console.log(`  left out as party/state messaging: [${a.sourceId}] ${a.titleOriginal}`);
+    },
+  );
   await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummary);
 }
 

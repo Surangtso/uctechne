@@ -24,6 +24,11 @@ isTech
 importance (integer 1-5)
 - 5: shifts the industry or a major company's direction. 3: notable. 1: minor or incremental.
 
+propaganda
+- true when the item itself is Chinese Communist Party or PRC state messaging: leader speeches and instructions, slogans, party-congress or ideological campaigns, and state-media style achievement claims that praise the party or government without independent reporting. If this is the main content of the item, the digest leaves it out.
+- false for independent reporting or analysis about the party, the government or its policies, including regulation, export controls, subsidies and official statistics reported as facts. Coverage about China is not propaganda; only content that itself promotes the party line is.
+- Always false for items that have nothing to do with the Chinese party-state.
+
 titleKo
 - Only when isTech is true, otherwise an empty string.
 - A natural Korean headline that translates the original title faithfully. Do not add claims, sensationalism or details. Use the conventional Korean names of companies and people (엔비디아, 바이트댄스) and keep product names in Latin script. Drop outlet boilerplate such as "36氪获悉".`;
@@ -58,6 +63,7 @@ const TRANSLATE_SCHEMA = obj({
   id: { type: "string" },
   isTech: { type: "boolean" },
   importance: { type: "integer" },
+  propaganda: { type: "boolean" },
   titleKo: { type: "string" },
 });
 
@@ -67,7 +73,7 @@ const SUMMARY_SCHEMA = obj({
   commentKo: { type: "string" },
 });
 
-export type TranslateResult = { id: string; isTech: boolean; importance: number; titleKo: string };
+export type TranslateResult = { id: string; isTech: boolean; importance: number; propaganda: boolean; titleKo: string };
 export type SummaryResult = { id: string; summaryKo: string; commentKo: string };
 export type Usage = { input: number; output: number };
 
@@ -140,10 +146,12 @@ export function summarizeBatch(client: Anthropic, batch: Article[]) {
 const clean = (s: string) => (s.trim() ? s.trim() : undefined);
 
 export function applyTranslation(article: Article, r: TranslateResult): void {
+  // propaganda is stored as "not for the digest" (is_tech = false), which also skips the summary step
+  const keep = r.isTech && !r.propaganda;
   article.processedAt = new Date().toISOString();
-  article.isTech = r.isTech;
+  article.isTech = keep;
   article.importance = Math.min(5, Math.max(1, Math.round(r.importance)));
-  article.titleKo = r.isTech ? clean(r.titleKo) : undefined;
+  article.titleKo = keep ? clean(r.titleKo) : undefined;
 }
 
 export function applySummary(article: Article, r: SummaryResult): void {
