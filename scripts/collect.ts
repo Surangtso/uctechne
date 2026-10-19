@@ -1,0 +1,15 @@
+import { collectAll } from "../lib/collect";
+import { SOURCES } from "../lib/sources";
+import { mergeItems } from "../lib/store";
+
+async function main() {
+  const { items, reports } = await collectAll(SOURCES);
+  for (const r of reports) {
+    console.log(`${r.ok ? "ok  " : "FAIL"} ${r.sourceId.padEnd(16)} ${r.ok ? r.count + " items" : r.error}`);
+  }
+  const { added, total } = await mergeItems(items);
+  console.log(`\n${added.length} new, ${total} stored`);
+  if (reports.some((r) => !r.ok)) process.exitCode = 1;
+}
+
+main();
