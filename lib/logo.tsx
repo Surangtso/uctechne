@@ -13,7 +13,7 @@ const CUT = 3;
 // The drawing in a 100 x 100 box: U in the second quadrant (top left), C in the fourth (bottom right), the two
 // overlapping a little. Both use the same gradient, so a thin gap is cut out of U around C; without it the
 // overlap would merge into one blob. The letters are Verdana Bold Italic outlines (scripts/make-logo-paths.mjs).
-// Returned as plain elements, to be placed inside an <svg> (also used by the share image in lib/og.tsx).
+// Returned as plain elements, to be placed inside an <svg> (used by the tab and iOS icons).
 // (An array, not a React fragment: the image renderer cannot read fragments inside an <svg>.)
 export function logoShapes() {
   return [
