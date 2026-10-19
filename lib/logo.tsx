@@ -1,44 +1,22 @@
-import { readFile } from "node:fs/promises";
-import path from "node:path";
+import { LOGO_C, LOGO_U } from "./logo-paths";
 
-// the site's main dark blue (same as --accent in globals.css) on the light page tone
-export const LOGO_COLOR = "#120a8f";
-export const LOGO_BACKGROUND = "#f4f9ff";
-
-// Arimo SemiBold Italic, Latin subset (SIL OFL; the license sits next to it in assets/).
-// "use cache" makes the file read part of the build, so the icon routes are generated once, not per request.
-export async function logoFont() {
-  "use cache";
-  const file = await readFile(path.join(process.cwd(), "assets", "Arimo-SemiBoldItalic-latin.woff"));
-  const data = file.buffer.slice(file.byteOffset, file.byteOffset + file.byteLength) as ArrayBuffer;
-  return [{ name: "Arimo", data, style: "italic" as const, weight: 600 as const }];
-}
-
-// U sits in the second quadrant (top left) and C in the fourth (bottom right) of a square tile.
-// Styles are inline and flex-only because next/og (satori) does not read CSS classes.
-export function Logo({ size }: { size: number }) {
-  const font = size * 0.68;
+// A 100 x 100 drawing: U in the second quadrant (top left), C in the fourth (bottom right).
+// The letters are Verdana Bold Italic outlines (see scripts/make-logo-paths.mjs), filled with a gradient
+// built on the site's main dark blue, #120a8f, which sits in the middle of the ramp.
+// Without `background` the logo is transparent. Inline SVG so next/og can render it.
+export function Logo({ size, background }: { size: number; background?: string }) {
   return (
-    <div
-      style={{
-        width: size,
-        height: size,
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "space-between",
-        padding: `${size * 0.1}px ${size * 0.12}px`,
-        background: LOGO_BACKGROUND,
-        borderRadius: size * 0.22,
-        color: LOGO_COLOR,
-        fontFamily: "Arimo",
-        fontStyle: "italic",
-        fontWeight: 600,
-        fontSize: font,
-        lineHeight: 0.7,
-      }}
-    >
-      <div style={{ display: "flex", justifyContent: "flex-start" }}>U</div>
-      <div style={{ display: "flex", justifyContent: "flex-end" }}>C</div>
-    </div>
+    <svg width={size} height={size} viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="uc" gradientUnits="userSpaceOnUse" x1="7" y1="7" x2="93" y2="93">
+          <stop offset="0" stopColor="#3b30d6" />
+          <stop offset="0.55" stopColor="#120a8f" />
+          <stop offset="1" stopColor="#0a0560" />
+        </linearGradient>
+      </defs>
+      {background ? <rect width="100" height="100" fill={background} /> : null}
+      <path d={LOGO_U} fill="url(#uc)" />
+      <path d={LOGO_C} fill="url(#uc)" />
+    </svg>
   );
 }
