@@ -136,20 +136,21 @@ function Nav({ activeId }: { activeId?: string }) {
       ))}
       <Chip href="/" label="전체" on={!activeId} />
       <div className="ml-auto">
-        <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} />
+        <Chip href={`/?source=${CURATED}`} label="큐레이션" on={activeId === CURATED} curated />
       </div>
     </nav>
   );
 }
 
-function Chip({ href, label, on }: { href: string; label: string; on: boolean }) {
+function Chip({ href, label, on, curated }: { href: string; label: string; on: boolean; curated?: boolean }) {
+  // selected chips look the same everywhere; the unselected 큐레이션 chip keeps its own teal
+  const tone = on
+    ? "bg-accent text-background"
+    : curated
+      ? "bg-curated text-on-curated hover:opacity-90"
+      : "bg-card text-tagline hover:text-accent";
   return (
-    <Link
-      href={href}
-      className={`rounded-full px-3 py-1.5 ${
-        on ? "bg-accent text-background" : "bg-card text-tagline hover:text-accent"
-      }`}
-    >
+    <Link href={href} className={`rounded-full px-3 py-1.5 font-bold ${tone}`}>
       {label}
     </Link>
   );
