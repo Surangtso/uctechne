@@ -92,13 +92,15 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                 {a.titleKo && a.titleOriginal && (
                   <p className="mt-1 text-[11px] leading-snug text-muted">{a.titleOriginal}</p>
                 )}
-                {a.summaryKo && <p className="mt-3 text-[15px] leading-relaxed text-muted">{a.summaryKo}</p>}
+                {comment && (
+                  <p className="mt-3 border-l-2 border-accent pl-3 text-[15px] leading-relaxed text-foreground">
+                    {comment}
+                  </p>
+                )}
                 {/* hidden until the card is hovered or focused; always visible on touch screens (see globals.css) */}
                 <div className="news-more">
                   <div className="news-more-inner">
-                    {comment && (
-                      <p className="border-l-2 border-accent pl-3 text-sm leading-relaxed text-foreground">{comment}</p>
-                    )}
+                    {a.summaryKo && <p className="text-[15px] leading-relaxed text-muted">{a.summaryKo}</p>}
                     {a.quote && <p className="mt-3 text-sm italic leading-relaxed text-muted">“{a.quote}”</p>}
                     <a
                       href={a.url}
