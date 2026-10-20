@@ -2,8 +2,9 @@ name: Update articles
 
 on:
   schedule:
-    # every 3 hours (UTC); minute 17 avoids the top-of-hour rush that delays scheduled runs
-    - cron: "17 */3 * * *"
+    # hourly (UTC); minute 17 avoids the top-of-hour rush. GitHub delays or skips scheduled runs when it is busy
+    # (a 3-hourly schedule was actually running every 4-8 hours), so asking hourly keeps the real gap short.
+    - cron: "17 * * * *"
   workflow_dispatch:
 
 # a slow run must never overlap the next one
