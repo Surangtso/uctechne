@@ -182,6 +182,51 @@ export async function saveEnrichment(a: Article): Promise<void> {
   );
 }
 
+// Recent rows from these sources whose excerpt is empty or shorter than `shortBelow`: their article page is worth
+// another try. The length test is done here because the database cannot filter on text length.
+export async function needingDetail(
+  sourceIds: string[],
+  shortBelow: number,
+  days = 7,
+  limit = 40,
+): Promise<{ url: string; sourceId: string; excerptLength: number }[]> {
+  const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+  const rows = check(
+    await db()
+      .from(TABLE)
+      .select("url,source_id,excerpt")
+      .in("source_id", sourceIds)
+      .eq("curated", false)
+      .eq("paywalled", false)
+      .gte("first_seen_at", since)
+      .order("sort_at", { ascending: false })
+      .limit(300),
+    "read rows needing detail",
+  ) as { url: string; source_id: string; excerpt: string }[];
+  return rows
+    .filter((r) => r.excerpt.length < shortBelow)
+    .slice(0, limit)
+    .map((r) => ({ url: r.url, sourceId: r.source_id, excerptLength: r.excerpt.length }));
+}
+
+// Stores a fuller excerpt (and the publish time when it is now known). The row's summary and comment were
+// written from the old, thin text, so they are cleared and the summary step writes them again.
+export async function updateDetails(details: { url: string; excerpt: string; publishedAt?: string }[]): Promise<number> {
+  let n = 0;
+  for (const d of details) {
+    const patch = {
+      excerpt: d.excerpt,
+      ...(d.publishedAt ? { published_at: d.publishedAt, sort_at: d.publishedAt } : {}),
+      summarized_at: null,
+      summary_ko: null,
+      comment_ko: null,
+    };
+    check(await db().from(TABLE).update(patch).eq("url", d.url).eq("curated", false), `update details ${d.url}`);
+    n++;
+  }
+  return n;
+}
+
 // articles for the feed: only ones the AI step has classified as tech, newest first.
 // Unprocessed rows stay out, so an untranslated title never shows while it waits for the next update.
 // Without a sourceId (the 전체 view) only outlet articles are listed; hand-curated posts appear only when

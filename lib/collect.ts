@@ -137,16 +137,54 @@ async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>
   return out;
 }
 
-// the huxiu front page has no dates or blurbs; each article page carries both in its meta tags
-async function withHuxiuDetail(item: CollectedItem): Promise<CollectedItem> {
+// Some lists give too little to summarize: the huxiu front page has no dates or blurbs, and the tmtpost feed
+// carries only a one-line subtitle. Their article pages hold more, so those are read for sources listed here.
+const DETAIL_SOURCES = new Set(["huxiu", "tmtpost"]);
+const SHORT_EXCERPT = 60; // fewer characters than this is not enough for the AI to work with
+
+type Detail = { excerpt: string; publishedAt?: string };
+
+async function fetchDetail(sourceId: string, url: string): Promise<Detail | null> {
   try {
-    const $ = cheerio.load(await fetchText(item.url));
-    const blurb = $('meta[name="description"]').attr("content") ?? "";
-    const time = $('meta[property="article:published_time"]').attr("content") ?? "";
-    return { ...item, excerpt: plain(blurb), publishedAt: toIso(time) };
+    const $ = cheerio.load(await fetchText(url));
+    if (sourceId === "huxiu") {
+      // the page's meta tags carry a two-sentence blurb and the publish time
+      const blurb = $('meta[name="description"]').attr("content") ?? "";
+      const time = $('meta[property="article:published_time"]').attr("content") ?? "";
+      return { excerpt: plain(blurb), publishedAt: toIso(time) };
+    }
+    if (sourceId === "tmtpost") {
+      // the first paragraphs of the article body
+      $("script,style,noscript").remove();
+      const body = $("article p")
+        .map((_, p) => $(p).text().trim())
+        .get()
+        .filter((t) => t.length > 20)
+        .join(" ");
+      return { excerpt: plain(body) };
+    }
+    return null;
   } catch {
-    return item;
+    return null;
   }
+}
+
+async function withDetail(item: CollectedItem): Promise<CollectedItem> {
+  const d = await fetchDetail(item.sourceId, item.url);
+  return d ? { ...item, excerpt: d.excerpt || item.excerpt, publishedAt: d.publishedAt ?? item.publishedAt } : item;
+}
+
+export type StaleRow = { url: string; sourceId: string; excerptLength: number };
+export type RefreshedDetail = { url: string; excerpt: string; publishedAt?: string };
+
+// Retries the article page of stored rows whose excerpt came out empty or too short (a first attempt can fail,
+// and a failed huxiu page is never listed as new again). Only a longer excerpt than before counts.
+export async function refreshDetails(rows: StaleRow[]): Promise<RefreshedDetail[]> {
+  const out = await mapLimit<StaleRow, RefreshedDetail | null>(rows, 3, async (r) => {
+    const d = await fetchDetail(r.sourceId, r.url);
+    return d && d.excerpt.length > r.excerptLength ? { url: r.url, excerpt: d.excerpt, publishedAt: d.publishedAt } : null;
+  });
+  return out.filter((x): x is RefreshedDetail => x !== null);
 }
 
 // known: urls already stored, so html sources only fetch detail pages for new articles
@@ -162,8 +200,17 @@ export async function collectSource(
       items = await mapLimit(
         items.filter((i) => !known.has(i.url)),
         4,
-        withHuxiuDetail,
+        withDetail,
       );
+    } else if (DETAIL_SOURCES.has(source.id)) {
+      // a feed item whose text is only a subtitle gets the start of its article page instead
+      const filled = await mapLimit(
+        items.filter((i) => !known.has(i.url) && i.excerpt.length < SHORT_EXCERPT),
+        3,
+        withDetail,
+      );
+      const byUrl = new Map(filled.map((i) => [i.url, i]));
+      items = items.map((i) => byUrl.get(i.url) ?? i);
     }
     return { items, report: { sourceId: source.id, ok: true, count: items.length } };
   } catch (e) {
@@ -171,6 +218,8 @@ export async function collectSource(
     return { items: [], report: { sourceId: source.id, ok: false, count: 0, error } };
   }
 }
+
+export { DETAIL_SOURCES, SHORT_EXCERPT };
 
 export async function collectAll(sources: Source[], known: Set<string> = new Set()) {
   const results = await Promise.all(sources.map((s) => collectSource(s, known)));

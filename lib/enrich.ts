@@ -45,7 +45,7 @@ summaryKo
 commentKo
 - A plain, neutral explanation in 1-2 Korean sentences of what this item is and why it matters to the industry, grounded in the given text plus only widely known background you are confident about.
 - Explain; do not conclude. Do not state any implication, lesson or takeaway that the article itself does not state, and give no opinions, predictions, advice or praise. Do not relate it to Korea or Korean readers.
-- Empty string if there is nothing to add beyond the summary.`;
+- Always write one when summaryKo is not empty: a card without a comment looks unfinished. Leave it empty only when summaryKo is empty too.`;
 
 export const obj = (properties: Record<string, unknown>) =>
   ({
