@@ -20,6 +20,7 @@ isTech
 - true for technology-industry news: AI and software, semiconductors and the chip supply chain, cloud and data centers, internet platforms and social media, cybersecurity, robotics, autonomous driving and EV or battery technology, space, telecom, fintech and crypto infrastructure, big-tech company strategy, tech policy and regulation, tech startups and funding.
 - When unsure whether an item belongs to the technology industry, choose true: readers would rather see a borderline item than miss one. Company news about a tech company (earnings, strategy, hiring, communications) counts.
 - false for consumer electronics and gadget product news (phones, laptops, TVs, headphones, wearables, reviews, deals), and for entertainment, games, film, music, sports, general politics, macro-economy, stock-market chatter, real estate, consumer goods, health and lifestyle news that has no technology-industry angle.
+- Also false, even when unsure, for national-image and public-opinion pieces: "foreigners envy / admire / are shocked by China (or the US)", national comparisons of lifestyle, freedom or social customs, viral-blogger or social-media sentiment stories, and similar items whose point is a flattering or hostile picture of a country rather than a technology-industry fact. Their sourcing is usually anecdotal and cannot be checked.
 
 importance (integer 1-5)
 - 5: shifts the industry or a major company's direction. 3: notable. 1: minor or incremental.
