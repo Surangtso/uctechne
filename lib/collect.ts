@@ -144,7 +144,20 @@ const SHORT_EXCERPT = 60; // fewer characters than this is not enough for the AI
 
 type Detail = { excerpt: string; publishedAt?: string };
 
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+// One failed request (bot check, dropped connection) is common, so a page is tried a few times with a growing
+// pause; an empty result counts as a failure too.
 async function fetchDetail(sourceId: string, url: string): Promise<Detail | null> {
+  for (let attempt = 1; attempt <= 3; attempt++) {
+    const d = await fetchDetailOnce(sourceId, url);
+    if (d && d.excerpt) return d;
+    if (attempt < 3) await sleep(1500 * attempt);
+  }
+  return null;
+}
+
+async function fetchDetailOnce(sourceId: string, url: string): Promise<Detail | null> {
   try {
     const $ = cheerio.load(await fetchText(url));
     if (sourceId === "huxiu") {
@@ -180,7 +193,7 @@ export type RefreshedDetail = { url: string; excerpt: string; publishedAt?: stri
 // Retries the article page of stored rows whose excerpt came out empty or too short (a first attempt can fail,
 // and a failed huxiu page is never listed as new again). Only a longer excerpt than before counts.
 export async function refreshDetails(rows: StaleRow[]): Promise<RefreshedDetail[]> {
-  const out = await mapLimit<StaleRow, RefreshedDetail | null>(rows, 3, async (r) => {
+  const out = await mapLimit<StaleRow, RefreshedDetail | null>(rows, 2, async (r) => {
     const d = await fetchDetail(r.sourceId, r.url);
     return d && d.excerpt.length > r.excerptLength ? { url: r.url, excerpt: d.excerpt, publishedAt: d.publishedAt } : null;
   });
@@ -199,14 +212,14 @@ export async function collectSource(
     if (source.kind === "html") {
       items = await mapLimit(
         items.filter((i) => !known.has(i.url)),
-        4,
+        2,
         withDetail,
       );
     } else if (DETAIL_SOURCES.has(source.id)) {
       // a feed item whose text is only a subtitle gets the start of its article page instead
       const filled = await mapLimit(
         items.filter((i) => !known.has(i.url) && i.excerpt.length < SHORT_EXCERPT),
-        3,
+        2,
         withDetail,
       );
       const byUrl = new Map(filled.map((i) => [i.url, i]));
