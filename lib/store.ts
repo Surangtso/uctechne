@@ -239,6 +239,9 @@ export async function listPublic(opts: { sourceId?: string; limit: number }): Pr
     .order("sort_at", { ascending: false })
     .limit(opts.limit);
   q = opts.sourceId ? q.eq("source_id", opts.sourceId) : q.eq("curated", false);
+  // An outlet article waits for its summary, so a card never shows with only a title. Curated posts are
+  // written by hand and may have none.
+  if (opts.sourceId !== "curated") q = q.not("summary_ko", "is", null).neq("summary_ko", "");
   const rows = check(await q, "read feed") as unknown as Parameters<typeof fromRow>[0][];
   return rows.map(fromRow);
 }
