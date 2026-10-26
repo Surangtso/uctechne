@@ -33,6 +33,12 @@ export const SOURCES: Source[] = [
   { id: "bloomberg-tech", name: "Bloomberg Technology", lang: "en", kind: "rss", url: "https://feeds.bloomberg.com/technology/news.rss" },
   { id: "cnbc-tech", name: "CNBC Tech", lang: "en", kind: "rss", url: "https://www.cnbc.com/id/19854910/device/rss/rss.html" },
   { id: "mit-tech-review", name: "MIT Technology Review", lang: "en", kind: "rss", url: "https://www.technologyreview.com/feed/" },
+  { id: "engadget", name: "Engadget", lang: "en", kind: "rss", url: "https://www.engadget.com/rss.xml" },
+  // newsletters: the feed holds the free part of each post, which is all that is read
+  { id: "platformer", name: "Platformer", lang: "en", kind: "rss", url: "https://www.platformer.news/rss/" },
+  { id: "big-technology", name: "Big Technology", lang: "en", kind: "rss", url: "https://www.bigtechnology.com/feed" },
+  { id: "404-media", name: "404 Media", lang: "en", kind: "rss", url: "https://www.404media.co/rss/" },
+  { id: "not-boring", name: "Not Boring", lang: "en", kind: "rss", url: "https://www.notboring.co/feed" },
   { id: "tmtpost", name: "钛媒体", lang: "zh", kind: "rss", url: "https://www.tmtpost.com/rss.xml" },
   // the bare 36kr.com/feed sits behind a bot check; the www host serves the public feed
   { id: "36kr", name: "36氪", lang: "zh", kind: "rss", url: "https://www.36kr.com/feed" },
