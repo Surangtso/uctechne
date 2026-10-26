@@ -43,6 +43,32 @@ export const SOURCES: Source[] = [
   // the bare 36kr.com/feed sits behind a bot check; the www host serves the public feed
   { id: "36kr", name: "36氪", lang: "zh", kind: "rss", url: "https://www.36kr.com/feed" },
   { id: "huxiu", name: "虎嗅", lang: "zh", kind: "html", url: "https://www.huxiu.com/", linkPattern: "/article/(\\d+)\\.html" },
+  // LatePost is mostly subscriber-only, so titles only. Its server sends an incomplete certificate chain that ends
+  // at Let's Encrypt's new Root YR (certs/isrg-root-yr.pem, from letsencrypt.org/certs/gen-y/root-yr.pem), which
+  // Node does not trust yet. The front page has no dates, so only the 20 newest ids are taken.
+  {
+    id: "latepost",
+    name: "晚点",
+    lang: "zh",
+    kind: "html",
+    url: "https://www.latepost.com/",
+    linkPattern: "/news/dj_detail\\?id=(\\d+)",
+    keepLatest: 20,
+    paywalled: true,
+    trustCa: "certs/isrg-root-yr.pem",
+  },
+  // article pages are drawn by script, so there is no text to read: titles only (newest 20 ids, as there are no dates)
+  {
+    id: "jazzyear",
+    name: "甲子光年",
+    lang: "zh",
+    kind: "html",
+    url: "https://www.jazzyear.com/",
+    linkPattern: "/article_info\\.html\\?id=(\\d+)",
+    titleSelector: ".title, .article-title",
+    keepLatest: 20,
+    headlineOnly: true,
+  },
   { id: "jiemian", name: "界面新闻", lang: "zh", kind: "rss", url: "https://a.jiemian.com/index.php?m=article&a=rss" },
   { id: "cyzone", name: "创业邦", lang: "zh", kind: "rss", url: "https://www.cyzone.cn/rss/" },
   // front page only; the date and blurb come from each article page
