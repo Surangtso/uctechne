@@ -4,8 +4,10 @@ import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
 import { updateTag } from "next/cache";
 import { COOKIE, MAX_AGE, passwordMatches, requireAdmin, sessionToken } from "@/lib/admin";
+import Anthropic from "@anthropic-ai/sdk";
 import { draftCuration, type Draft } from "@/lib/curate";
-import { deleteCurated, insertCurated, type CuratedInput } from "@/lib/store";
+import { applyEnglish, englishBatch } from "@/lib/enrich";
+import { deleteCurated, insertCurated, saveEnglish, type CuratedInput } from "@/lib/store";
 
 export async function login(formData: FormData) {
   const candidate = String(formData.get("password") ?? "");
@@ -58,7 +60,15 @@ export async function publishAction(input: CuratedInput): Promise<ActionResult> 
     if (!validUrl(input.url)) return { ok: false, error: "원문 링크가 올바른 주소가 아닙니다." };
     if (!input.titleKo.trim()) return { ok: false, error: "한국어 제목을 입력해주세요." };
     if (!input.sourceLabel.trim()) return { ok: false, error: "출처(플랫폼)를 입력해주세요." };
-    await insertCurated({ ...input, url: input.url.trim() });
+    const post = await insertCurated({ ...input, url: input.url.trim() });
+    // English edition: best effort. If it fails the post stays without English and the next update run writes it.
+    try {
+      const { results } = await englishBatch(new Anthropic(), [post]);
+      if (results[0]) {
+        applyEnglish(post, results[0]);
+        await saveEnglish(post);
+      }
+    } catch {}
     updateTag("feed"); // the feed is cached for minutes; this shows the new post right away
     return { ok: true, data: null };
   } catch (e) {
