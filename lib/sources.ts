@@ -87,6 +87,7 @@ export const SOURCES: Source[] = [
     kind: "jiqizhixin",
     url: "https://www.jiqizhixin.com/api/article_library/articles.json?sort=time&page=1&per=20",
   },
+  { id: "aiera", name: "新智元", lang: "zh", kind: "rss", url: "https://aiera.com.cn/feed" },
   { id: "qbitai", name: "量子位", lang: "zh", kind: "rss", url: "https://www.qbitai.com/feed" },
   { id: "zhidx", name: "智东西", lang: "zh", kind: "rss", url: "https://zhidx.com/rss" },
   { id: "leiphone", name: "雷峰网", lang: "zh", kind: "rss", url: "https://www.leiphone.com/feed" },
