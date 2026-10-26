@@ -222,7 +222,7 @@ async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>
 
 // Some lists give too little to summarize: the huxiu front page has no dates or blurbs, and the tmtpost feed
 // carries only a one-line subtitle. Their article pages hold more, so those are read for sources listed here.
-const DETAIL_SOURCES = new Set(["huxiu", "pedaily", "tmtpost"]);
+const DETAIL_SOURCES = new Set(["huxiu", "pedaily", "pingwest", "tmtpost"]);
 const SHORT_EXCERPT = 60; // fewer characters than this is not enough for the AI to work with
 
 type Detail = { excerpt: string; publishedAt?: string };
@@ -249,6 +249,21 @@ async function fetchDetailOnce(sourceId: string, url: string): Promise<Detail | 
       const blurb = $('meta[name="description"]').attr("content") ?? "";
       const time = $('meta[property="article:published_time"]').attr("content") ?? "";
       return { excerpt: plain(blurb), publishedAt: toIso(time) };
+    }
+    if (sourceId === "pingwest") {
+      // the publish time sits in the page's ld+json block, the text in the article body
+      let time = "";
+      try {
+        time = String(JSON.parse($('script[type="application/ld+json"]').first().text()).pubDate ?? "");
+      } catch {
+        // no usable block: the article is stored without a date
+      }
+      const body = $("article.article-style p")
+        .map((_, p) => $(p).text().trim())
+        .get()
+        .filter((t) => t.length > 20)
+        .join(" ");
+      return { excerpt: plain(body), publishedAt: toIso(time) };
     }
     if (sourceId === "tmtpost") {
       // the first paragraphs of the article body
