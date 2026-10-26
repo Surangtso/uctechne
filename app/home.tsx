@@ -5,7 +5,7 @@ import { getFeed } from "@/lib/feed";
 import { timeAgo } from "@/lib/format";
 import { needsLogin, platformLabel } from "@/lib/platforms";
 import { T, type Lang } from "@/lib/i18n";
-import { SOURCES, regionOf } from "@/lib/sources";
+import { SOURCES, nameOf, regionOf } from "@/lib/sources";
 
 const PAGE_SIZE = 60;
 const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
@@ -100,7 +100,7 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
             const quote = en ? a.quoteEn : a.quote;
             const author = en ? a.authorEn : a.author;
             // outlet name (darker) and what follows it (region or author, kept gray)
-            const outlet = a.curated ? (a.sourceLabel ? platformLabel(a.sourceLabel, lang) : t.curated) : (src?.name ?? a.sourceId);
+            const outlet = a.curated ? (a.sourceLabel ? platformLabel(a.sourceLabel, lang) : t.curated) : (src ? nameOf(src, lang) : a.sourceId);
             const outletNote = a.curated ? author : src ? t[regionOf(src)] : undefined;
             return (
               <li
@@ -175,7 +175,7 @@ function Nav({ lang, base, activeId }: { lang: Lang; base: string; activeId?: st
         <div key={region} className="flex flex-wrap items-center gap-2">
           <span className="text-[11px] font-medium tracking-wide text-muted">{region === "us" ? "US" : "CN"}</span>
           {SOURCES.filter((s) => regionOf(s) === region).map((s) => (
-            <Chip key={s.id} href={href(s.id)} label={s.name} on={activeId === s.id} />
+            <Chip key={s.id} href={href(s.id)} label={nameOf(s, lang)} on={activeId === s.id} />
           ))}
         </div>
       ))}

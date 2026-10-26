@@ -2,6 +2,14 @@ import type { Source } from "./types";
 
 export const regionOf = (s: Source): "us" | "cn" => s.region ?? (s.lang === "zh" ? "cn" : "us");
 
+// Chinese outlets are shown under these names in the English edition
+const NAME_EN: Record<string, string> = {
+  tmtpost: "TMTPost", "36kr": "36Kr", huxiu: "Huxiu", latepost: "LatePost", jazzyear: "Jazzyear", waves: "Waves",
+  jiqizhixin: "Synced", aiera: "Aiera", qbitai: "QbitAI", zhidx: "Zhidx", leiphone: "Leiphone", geekpark: "GeekPark",
+  ifanr: "ifanr", pingwest: "PingWest", sspai: "Sspai", ithome: "ITHome", jiemian: "Jiemian", cyzone: "Cyzone", pedaily: "Pedaily",
+};
+export const nameOf = (s: Source, lang: "ko" | "en") => (lang === "en" ? (NAME_EN[s.id] ?? s.name) : s.name);
+
 export const SOURCES: Source[] = [
   { id: "techmeme", name: "Techmeme", lang: "en", kind: "rss", url: "https://www.techmeme.com/feed.xml" },
   { id: "verge", name: "The Verge", lang: "en", kind: "rss", url: "https://www.theverge.com/rss/index.xml" },
