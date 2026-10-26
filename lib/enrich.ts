@@ -21,6 +21,7 @@ isTech
 - Also true for tech entrepreneurship writing, even without a news event: how founders build, fund and grow technology companies, venture capital and startup strategy, product and business-model analysis of tech companies, and essays or interviews with tech founders and investors.
 - When unsure whether an item belongs to the technology industry, choose true: readers would rather see a borderline item than miss one. Company news about a tech company (earnings, strategy, hiring, communications) counts.
 - false for consumer electronics and gadget product news (phones, laptops, TVs, headphones, wearables, reviews, deals), and for entertainment, games, film, music, sports, general politics, macro-economy, stock-market chatter, real estate, consumer goods, health and lifestyle news that has no technology-industry angle.
+- Also false, even when unsure, for donations, charity, disaster relief and other corporate social responsibility news: "X donates 10 million yuan to earthquake relief", "Y sends first relief supplies", volunteer or poverty-alleviation campaigns. A tech company giving money or goods is not technology-industry news, and neither is the disaster itself.
 - Also false, even when unsure, for national-image and public-opinion pieces: "foreigners envy / admire / are shocked by China (or the US)", national comparisons of lifestyle, freedom or social customs, viral-blogger or social-media sentiment stories, and similar items whose point is a flattering or hostile picture of a country rather than a technology-industry fact. Their sourcing is usually anecdotal and cannot be checked.
 
 importance (integer 1-5)
@@ -34,7 +35,8 @@ propaganda
 titleKo
 - Only when isTech is true, otherwise an empty string.
 - Always Korean (Hangul). Never copy the original title back, even when it is short or mostly names: translate every Chinese or English headline.
-- A natural Korean headline that translates the original title faithfully. Do not add claims, sensationalism or details. Use the conventional Korean names of companies and people (엔비디아, 바이트댄스) and keep product names in Latin script. Drop outlet boilerplate such as "36氪获悉".`;
+- A natural Korean headline that translates the original title faithfully. Do not add claims, sensationalism or details. Use the conventional Korean names of companies and people (엔비디아, 바이트댄스) and keep product names in Latin script. Drop outlet boilerplate such as "36氪获悉".
+- Write every Chinese company, person and place name in Hangul, never in Chinese characters: 拼多多 → 핀둬둬, 西藏 → 시짱, 那曲 → 나취. Use the standard Chinese-pronunciation transliteration. Never replace one place or person with another, and never add one the title does not name. If a name could be misread, add the original once in parentheses after the Hangul, e.g. 훙궈(红果).`;
 
 const SUMMARY_SYSTEM = `${COMMON}
 
@@ -151,7 +153,10 @@ const clean = (s: string) => (s.trim() ? s.trim() : undefined);
 
 // The cheap model sometimes hands the original title back as the "translation". A Korean headline always has Hangul.
 export const hasHangul = (s: string) => /[가-힯]/.test(s);
-export const untranslated = (r: TranslateResult) => r.isTech && !r.propaganda && !hasHangul(r.titleKo);
+// Chinese characters left outside parentheses mean a name was not translated; ones inside "(红果)" are the intended gloss.
+export const hasStrayHan = (s: string) => /[一-鿿]/.test(s.replace(/\([^)]*\)/g, ""));
+export const untranslated = (r: TranslateResult) =>
+  r.isTech && !r.propaganda && (!hasHangul(r.titleKo) || hasStrayHan(r.titleKo));
 
 export function applyTranslation(article: Article, r: TranslateResult): void {
   // propaganda is stored as "not for the digest" (is_tech = false), which also skips the summary step
