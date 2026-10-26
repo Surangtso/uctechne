@@ -88,7 +88,10 @@ function parseFeed(xml: string, source: Source): CollectedItem[] {
       const cats = categories(it.category);
       if (!cats.some((c) => source.categories!.includes(c))) continue;
     }
-    const body = text(it.description) || text(it.summary) || text(it.content) || text(it["content:encoded"]);
+    // newsletters put only a subtitle in description and the post itself in content:encoded: take the fuller one
+    const blurb = text(it.description) || text(it.summary) || text(it.content);
+    const full = text(it["content:encoded"]);
+    const body = plain(full).length > plain(blurb).length ? full : blurb;
     items.push({
       sourceId: source.id,
       url: normalizeUrl(url),
