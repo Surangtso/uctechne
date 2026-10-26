@@ -315,6 +315,15 @@ export async function listPublic(opts: { sourceId?: string; limit: number; lang?
   return rows.map(fromRow);
 }
 
+// articles by id, for a reader's saved list; only ones that are still public tech articles
+export async function listByIds(ids: string[]): Promise<Article[]> {
+  const rows = check(
+    await db().from(TABLE).select(PUBLIC_COLS).in("id", ids).eq("is_tech", true),
+    "read saved articles",
+  ) as unknown as Parameters<typeof fromRow>[0][];
+  return rows.map(fromRow);
+}
+
 export type CuratedInput = {
   url: string;
   sourceLabel: string;

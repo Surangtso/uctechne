@@ -23,6 +23,11 @@ export const T = {
     search: "검색",
     resultsFor: "검색 결과",
     clearSearch: "검색 지우기",
+    save: "스크랩",
+    saved: "스크랩됨",
+    savedView: "내 스크랩",
+    savedNote: "스크랩은 이 브라우저에만 저장됩니다. 다른 기기에서는 보이지 않고, 브라우저 데이터를 지우면 사라집니다.",
+    savedEmpty: "스크랩한 기사가 없습니다. 카드의 스크랩 버튼을 눌러 저장하세요.",
   },
   en: {
     tagline: "Tech news from US and Chinese media in one place, translated into English. Read the full articles at the original links.",
@@ -45,5 +50,10 @@ export const T = {
     search: "Search",
     resultsFor: "Results for",
     clearSearch: "Clear search",
+    save: "Save",
+    saved: "Saved",
+    savedView: "Saved",
+    savedNote: "Saved articles are kept in this browser only. They do not appear on other devices and are lost if you clear browser data.",
+    savedEmpty: "Nothing saved yet. Use the Save button on a card.",
   },
 } as const satisfies Record<Lang, Record<string, string>>;
