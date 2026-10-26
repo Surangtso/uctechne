@@ -136,6 +136,25 @@ function parseFeed(xml: string, source: Source): CollectedItem[] {
       paywalled: titleOnly(source),
     });
   }
+  return source.keepLatest ? items.slice(0, source.keepLatest) : items;
+}
+
+// jiqizhixin.com's article library: { articles: [{ title, slug, publishedAt "2026/10/26 11:29" (China time), content }] }
+function parseJiqizhixin(json: string, source: Source): CollectedItem[] {
+  const list: { title?: string; slug?: string; publishedAt?: string; content?: string }[] = JSON.parse(json).articles ?? [];
+  const items: CollectedItem[] = [];
+  for (const a of list) {
+    const title = decode(a.title ?? "");
+    if (!title || !a.slug) continue;
+    items.push({
+      sourceId: source.id,
+      url: `https://www.jiqizhixin.com/articles/${a.slug}`,
+      titleOriginal: title,
+      publishedAt: a.publishedAt ? toIso(`${a.publishedAt.replace(/\//g, "-")} +0800`) : undefined,
+      excerpt: plain(a.content ?? ""),
+      paywalled: titleOnly(source),
+    });
+  }
   return items;
 }
 
@@ -222,7 +241,7 @@ async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>
 
 // Some lists give too little to summarize: the huxiu front page has no dates or blurbs, and the tmtpost feed
 // carries only a one-line subtitle. Their article pages hold more, so those are read for sources listed here.
-const DETAIL_SOURCES = new Set(["huxiu", "pedaily", "pingwest", "tmtpost"]);
+const DETAIL_SOURCES = new Set(["huxiu", "krasia", "pedaily", "pingwest", "qbitai", "tmtpost"]);
 const SHORT_EXCERPT = 60; // fewer characters than this is not enough for the AI to work with
 
 type Detail = { excerpt: string; publishedAt?: string };
@@ -244,7 +263,7 @@ async function fetchDetail(sourceId: string, url: string): Promise<Detail | null
 async function fetchDetailOnce(sourceId: string, url: string): Promise<Detail | null> {
   try {
     const $ = cheerio.load(await fetchText(url));
-    if (sourceId === "huxiu" || sourceId === "pedaily") {
+    if (sourceId === "huxiu" || sourceId === "pedaily" || sourceId === "krasia") {
       // the page's meta tags carry a two-sentence blurb and the publish time
       const blurb = $('meta[name="description"]').attr("content") ?? "";
       const time = $('meta[property="article:published_time"]').attr("content") ?? "";
@@ -265,10 +284,10 @@ async function fetchDetailOnce(sourceId: string, url: string): Promise<Detail | 
         .join(" ");
       return { excerpt: plain(body), publishedAt: toIso(time) };
     }
-    if (sourceId === "tmtpost") {
+    if (sourceId === "tmtpost" || sourceId === "qbitai") {
       // the first paragraphs of the article body
       $("script,style,noscript").remove();
-      const body = $("article p")
+      const body = $(sourceId === "qbitai" ? ".article p" : "article p")
         .map((_, p) => $(p).text().trim())
         .get()
         .filter((t) => t.length > 20)
@@ -307,7 +326,13 @@ export async function collectSource(
   try {
     const body = await fetchText(source.url, source.trustCa);
     let items =
-      source.kind === "rss" ? parseFeed(body, source) : source.kind === "qq" ? parseQq(body, source) : parseLinks(body, source);
+      source.kind === "rss"
+        ? parseFeed(body, source)
+        : source.kind === "qq"
+          ? parseQq(body, source)
+          : source.kind === "jiqizhixin"
+            ? parseJiqizhixin(body, source)
+            : parseLinks(body, source);
     if (items.length === 0) throw new Error("parsed 0 items");
     if (source.kind === "html") {
       items = await mapLimit(

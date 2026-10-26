@@ -33,8 +33,10 @@ export type Source = {
   id: string;
   name: string;
   lang: Lang;
-  // qq: the article list of a Tencent News author page (JSON)
-  kind: "rss" | "html" | "qq";
+  // qq: the article list of a Tencent News author page (JSON); jiqizhixin: that site's article library (JSON)
+  kind: "rss" | "html" | "qq" | "jiqizhixin";
+  // which button group the outlet sits in; by default Chinese-language outlets are CN and the rest US
+  region?: "us" | "cn";
   url: string;
   // headline-only sources: only title + link are usable
   paywalled?: boolean;
@@ -44,7 +46,8 @@ export type Source = {
   linkPattern?: string;
   // html sources: CSS selector, inside the link, of the element holding the headline
   titleSelector?: string;
-  // html sources without dates: keep only this many articles, the ones with the highest numeric id
+  // keep only this many articles: for html sources without dates the ones with the highest numeric id,
+  // for feeds the first listed (a few feeds carry years of history)
   keepLatest?: number;
   // free to read, but the page gives no text a reader or the AI can use: shown as a title only
   headlineOnly?: boolean;
