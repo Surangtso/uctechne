@@ -20,6 +20,13 @@ type Row = {
   summary_ko: string | null;
   comment_ko: string | null;
   comment_manual: string | null;
+  title_en?: string | null;
+  summary_en?: string | null;
+  comment_en?: string | null;
+  en_at?: string | null;
+  comment_manual_en?: string | null;
+  quote_en?: string | null;
+  author_en?: string | null;
   curated?: boolean;
   author?: string | null;
   source_label?: string | null;
@@ -31,7 +38,7 @@ const PAGE = 1000; // PostgREST returns at most 1000 rows per request
 const CHUNK = 500;
 // everything the page needs; excerpt (the original's text) is deliberately left out
 const PUBLIC_COLS =
-  "id,source_id,url,title_original,published_at,first_seen_at,paywalled,is_tech,importance,title_ko,summary_ko,comment_ko,comment_manual,curated,author,source_label,quote";
+  "id,source_id,url,title_original,published_at,first_seen_at,paywalled,is_tech,importance,title_ko,summary_ko,comment_ko,comment_manual,curated,author,source_label,quote,title_en,summary_en,comment_en,comment_manual_en,quote_en,author_en";
 
 export function articleId(url: string): string {
   return createHash("sha1").update(url).digest("hex").slice(0, 16);
@@ -85,6 +92,13 @@ function fromRow(r: Partial<Row> & Pick<Row, "id" | "source_id" | "url" | "title
     summaryKo: opt(r.summary_ko),
     commentKo: opt(r.comment_ko),
     commentManual: opt(r.comment_manual),
+    titleEn: opt(r.title_en),
+    summaryEn: opt(r.summary_en),
+    commentEn: opt(r.comment_en),
+    enAt: opt(r.en_at),
+    commentManualEn: opt(r.comment_manual_en),
+    quoteEn: opt(r.quote_en),
+    authorEn: opt(r.author_en),
     curated: r.curated || undefined,
     author: opt(r.author),
     sourceLabel: opt(r.source_label),
@@ -182,6 +196,39 @@ export async function saveEnrichment(a: Article): Promise<void> {
   );
 }
 
+// Rows that still need their English text: tech articles from the last `days` days (the English edition starts
+// there) and every curated post. An article whose summary is still to come waits for it.
+export async function pendingEnglish(days = 14): Promise<Article[]> {
+  const since = new Date(Date.now() - days * 24 * 3600 * 1000).toISOString();
+  const rows = check(
+    await db()
+      .from(TABLE)
+      .select("*")
+      .eq("is_tech", true)
+      .not("title_ko", "is", null)
+      .is("en_at", null)
+      .or(`curated.eq.true,sort_at.gte.${since}`)
+      .order("sort_at", { ascending: false })
+      .limit(5000),
+    "read pending English",
+  ) as Row[];
+  return rows.map(fromRow).filter((a) => a.curated || a.summarizedAt || !a.excerpt);
+}
+
+export async function saveEnglish(a: Article): Promise<void> {
+  check(
+    await db()
+      .from(TABLE)
+      .update(
+        a.curated
+          ? { title_en: nul(a.titleEn), summary_en: nul(a.summaryEn), comment_manual_en: nul(a.commentManualEn), quote_en: nul(a.quoteEn), author_en: nul(a.authorEn), en_at: nul(a.enAt) }
+          : { title_en: nul(a.titleEn), summary_en: nul(a.summaryEn), comment_en: nul(a.commentEn), en_at: nul(a.enAt) },
+      )
+      .eq("id", a.id),
+    `save English ${a.id}`,
+  );
+}
+
 // Recent rows from these sources whose excerpt is empty or shorter than `shortBelow`: their article page is worth
 // another try. The length test is done here because the database cannot filter on text length.
 export async function needingDetail(
@@ -220,6 +267,7 @@ export async function updateDetails(details: { url: string; excerpt: string; pub
       summarized_at: null,
       summary_ko: null,
       comment_ko: null,
+      en_at: null,
     };
     check(await db().from(TABLE).update(patch).eq("url", d.url).eq("curated", false), `update details ${d.url}`);
     n++;
@@ -231,7 +279,8 @@ export async function updateDetails(details: { url: string; excerpt: string; pub
 // Unprocessed rows stay out, so an untranslated title never shows while it waits for the next update.
 // Without a sourceId (the 전체 view) only outlet articles are listed; hand-curated posts appear only when
 // asked for with sourceId "curated" (the 큐레이션 button).
-export async function listPublic(opts: { sourceId?: string; limit: number }): Promise<Article[]> {
+export async function listPublic(opts: { sourceId?: string; limit: number; lang?: "ko" | "en" }): Promise<Article[]> {
+  const en = opts.lang === "en";
   let q = db()
     .from(TABLE)
     .select(PUBLIC_COLS)
@@ -241,7 +290,10 @@ export async function listPublic(opts: { sourceId?: string; limit: number }): Pr
   q = opts.sourceId ? q.eq("source_id", opts.sourceId) : q.eq("curated", false);
   // An outlet article waits for its summary, so a card never shows with only a title. Paywalled outlets are
   // title-only by design and curated posts are written by hand, so neither needs one.
-  if (opts.sourceId !== "curated") q = q.or("paywalled.eq.true,and(summary_ko.not.is.null,summary_ko.neq.)");
+  const summaryCol = en ? "summary_en" : "summary_ko";
+  if (opts.sourceId !== "curated") q = q.or(`paywalled.eq.true,and(${summaryCol}.not.is.null,${summaryCol}.neq.)`);
+  // the English edition lists only what has been written in English (the last two weeks and the curated posts)
+  if (en) q = q.not("title_en", "is", null);
   const rows = check(await q, "read feed") as unknown as Parameters<typeof fromRow>[0][];
   return rows.map(fromRow);
 }

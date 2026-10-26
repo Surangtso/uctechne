@@ -4,14 +4,16 @@ import {
   SUMMARY_MODEL,
   TRANSLATE_MODEL,
   applySummary,
+  applyEnglish,
   applyTranslation,
+  englishBatch,
   summarizeBatch,
   translateBatch,
   untranslated,
   type TranslateResult,
   type Usage,
 } from "../lib/enrich";
-import { pendingSummary, pendingTranslation, saveEnrichment } from "../lib/store";
+import { pendingEnglish, pendingSummary, pendingTranslation, saveEnglish, saveEnrichment } from "../lib/store";
 import type { Article } from "../lib/types";
 
 const CONCURRENCY = 3;
@@ -32,6 +34,7 @@ async function main() {
     todo: Article[],
     run: (batch: Article[]) => Promise<{ results: R[]; usage: Usage }>,
     apply: (a: Article, r: R) => void,
+    save: (a: Article) => Promise<void> = saveEnrichment,
   ) {
     if (todo.length === 0) {
       console.log(`${label}: nothing to do`);
@@ -57,7 +60,7 @@ async function main() {
               const a = byId.get(r.id);
               if (!a) return;
               apply(a, r);
-              await saveEnrichment(a);
+              await save(a);
             }),
           );
           total.input += usage.input;
@@ -94,6 +97,8 @@ async function main() {
     applyTitle(true),
   );
   await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummary);
+  // the English edition: the last two weeks of articles plus the curated posts
+  await phase("english", SUMMARY_MODEL, await pendingEnglish(), (b) => englishBatch(client, b), applyEnglish, saveEnglish);
 }
 
 main().catch((e) => {

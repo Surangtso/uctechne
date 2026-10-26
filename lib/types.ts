@@ -16,6 +16,11 @@ export type Article = {
   titleKo?: string;
   summaryKo?: string;
   commentKo?: string;
+  // English edition (/en); enAt = written, so an empty summaryEn then means "nothing to add"
+  titleEn?: string;
+  summaryEn?: string;
+  commentEn?: string;
+  enAt?: string;
   isTech?: boolean;
   importance?: number;
   // written by hand, wins over commentKo when present
@@ -25,6 +30,9 @@ export type Article = {
   author?: string;
   sourceLabel?: string;
   quote?: string;
+  commentManualEn?: string;
+  quoteEn?: string;
+  authorEn?: string;
 };
 
 export type CollectedItem = Omit<Article, "id" | "firstSeenAt">;
