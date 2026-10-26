@@ -69,6 +69,14 @@ export const SOURCES: Source[] = [
     keepLatest: 20,
     headlineOnly: true,
   },
+  // Waves publishes on Tencent News (news.qq.com/omn/author/8QIf3n9a7oYauzjc5QE%3D); this is the list that page loads
+  {
+    id: "waves",
+    name: "暗涌",
+    lang: "zh",
+    kind: "qq",
+    url: "https://i.news.qq.com/getSubNewsMixedList?guestSuid=8QIf3n9a7oYauzjc5QE%3D&tabId=om_article&caller=1&from_scene=103&offset_info=",
+  },
   { id: "jiemian", name: "界面新闻", lang: "zh", kind: "rss", url: "https://a.jiemian.com/index.php?m=article&a=rss" },
   { id: "cyzone", name: "创业邦", lang: "zh", kind: "rss", url: "https://www.cyzone.cn/rss/" },
   // front page only; the date and blurb come from each article page
