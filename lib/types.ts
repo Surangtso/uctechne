@@ -33,7 +33,8 @@ export type Source = {
   id: string;
   name: string;
   lang: Lang;
-  kind: "rss" | "html";
+  // qq: the article list of a Tencent News author page (JSON)
+  kind: "rss" | "html" | "qq";
   url: string;
   // headline-only sources: only title + link are usable
   paywalled?: boolean;

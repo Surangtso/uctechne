@@ -139,6 +139,25 @@ function parseFeed(xml: string, source: Source): CollectedItem[] {
   return items;
 }
 
+// The list a Tencent News author page loads: { newslist: [{ title, url, time, abstract }] }, newest first
+function parseQq(json: string, source: Source): CollectedItem[] {
+  const list: { title?: string; url?: string; time?: string; abstract?: string }[] = JSON.parse(json).newslist ?? [];
+  const items: CollectedItem[] = [];
+  for (const n of list) {
+    const title = decode(n.title ?? "");
+    if (!title || !n.url) continue;
+    items.push({
+      sourceId: source.id,
+      url: normalizeUrl(n.url),
+      titleOriginal: title,
+      publishedAt: n.time ? toIso(`${n.time} +0800`) : undefined,
+      excerpt: plain(n.abstract ?? ""),
+      paywalled: titleOnly(source),
+    });
+  }
+  return items;
+}
+
 // Sites without a feed: article cards on the front page are links matching source.linkPattern
 function parseLinks(html: string, source: Source): CollectedItem[] {
   const $ = cheerio.load(html);
@@ -272,7 +291,8 @@ export async function collectSource(
 ): Promise<{ items: CollectedItem[]; report: CollectReport }> {
   try {
     const body = await fetchText(source.url, source.trustCa);
-    let items = source.kind === "rss" ? parseFeed(body, source) : parseLinks(body, source);
+    let items =
+      source.kind === "rss" ? parseFeed(body, source) : source.kind === "qq" ? parseQq(body, source) : parseLinks(body, source);
     if (items.length === 0) throw new Error("parsed 0 items");
     if (source.kind === "html") {
       items = await mapLimit(
