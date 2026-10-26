@@ -1,3 +1,6 @@
+import { readFileSync } from "node:fs";
+import https from "node:https";
+import tls from "node:tls";
 import { XMLParser } from "fast-xml-parser";
 import * as cheerio from "cheerio";
 import type { CollectReport, CollectedItem, Source } from "./types";
@@ -8,14 +11,43 @@ const EXCERPT_MAX = 600;
 
 const parser = new XMLParser({ ignoreAttributes: false, attributeNamePrefix: "@_", textNodeName: "#text" });
 
-async function fetchText(url: string): Promise<string> {
-  const res = await fetch(url, {
-    headers: { "user-agent": UA, "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8" },
-    redirect: "follow",
-    signal: AbortSignal.timeout(20000),
+const HEADERS = { "user-agent": UA, "accept-language": "en-US,en;q=0.9,zh-CN;q=0.8" };
+
+// fetch() cannot take an extra root certificate, so a site that needs one is read through https directly
+function httpsGetText(url: string, caFile: string, redirects = 3): Promise<string> {
+  const ca = [...tls.rootCertificates, readFileSync(caFile, "utf8")];
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, { ca, headers: HEADERS, timeout: 20000 }, (res) => {
+      const status = res.statusCode ?? 0;
+      if (status >= 300 && status < 400 && res.headers.location && redirects > 0) {
+        res.resume();
+        resolve(httpsGetText(new URL(res.headers.location, url).href, caFile, redirects - 1));
+        return;
+      }
+      if (status !== 200) {
+        res.resume();
+        reject(new Error(`HTTP ${status}`));
+        return;
+      }
+      const chunks: Buffer[] = [];
+      res.on("data", (c: Buffer) => chunks.push(c));
+      res.on("end", () => resolve(Buffer.concat(chunks).toString("utf8")));
+      res.on("error", reject);
+    });
+    req.on("timeout", () => req.destroy(new Error("timeout")));
+    req.on("error", reject);
   });
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  const body = await res.text();
+}
+
+async function fetchText(url: string, caFile?: string): Promise<string> {
+  let body: string;
+  if (caFile) {
+    body = await httpsGetText(url, caFile);
+  } else {
+    const res = await fetch(url, { headers: HEADERS, redirect: "follow", signal: AbortSignal.timeout(20000) });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    body = await res.text();
+  }
   if (body.includes("__waf_verification_challenge")) throw new Error("blocked by bot check");
   return body;
 }
@@ -73,6 +105,9 @@ function toIso(v: string): string | undefined {
   return Number.isNaN(d2.getTime()) ? undefined : d2.toISOString();
 }
 
+// stored in the paywalled column: such an article is listed by its title alone
+const titleOnly = (source: Source) => !!(source.paywalled || source.headlineOnly);
+
 function parseFeed(xml: string, source: Source): CollectedItem[] {
   const doc = parser.parse(xml);
   const rawItems: Record<string, unknown>[] = doc.rss
@@ -97,8 +132,8 @@ function parseFeed(xml: string, source: Source): CollectedItem[] {
       url: normalizeUrl(url),
       titleOriginal: title,
       publishedAt: toIso(text(it.pubDate) || text(it.published) || text(it.updated)),
-      excerpt: source.paywalled ? "" : plain(body),
-      paywalled: !!source.paywalled,
+      excerpt: titleOnly(source) ? "" : plain(body),
+      paywalled: titleOnly(source),
     });
   }
   return items;
@@ -109,6 +144,7 @@ function parseLinks(html: string, source: Source): CollectedItem[] {
   const $ = cheerio.load(html);
   const pattern = new RegExp(source.linkPattern ?? "");
   const byId = new Map<string, CollectedItem>();
+  const ids = new Map<string, number>();
   $("a[href]").each((_, a) => {
     let link: URL;
     try {
@@ -120,7 +156,15 @@ function parseLinks(html: string, source: Source): CollectedItem[] {
     if (!m) return;
     // a heading or title attribute names the article; otherwise the link text does, if it reads like a headline
     const own = $(a).text().replace(/\s+/g, " ").trim();
-    const title = ($(a).find("h1,h2,h3").first().text() || $(a).attr("title") || (own.length <= 80 ? own : "")).trim();
+    const named = source.titleSelector ? $(a).find(source.titleSelector).first().text() : "";
+    const title = (
+      named.replace(/\s+/g, " ") ||
+      $(a).find("h1,h2,h3").first().text() ||
+      $(a).attr("title") ||
+      (own.length <= 80 ? own : "")
+    )
+      .replace(/\s*(今天|昨天|前天|\d{1,2}月\d{1,2}日|\d{4}-\d{2}-\d{2})$/, "") // a date written after the headline
+      .trim();
     if (title.length < 4) return;
     const key = m[1] ?? m[0];
     // the same article is linked more than once (image, label, headline): keep the fullest title
@@ -128,13 +172,19 @@ function parseLinks(html: string, source: Source): CollectedItem[] {
     if (seen && seen.titleOriginal.length >= title.length) return;
     byId.set(key, {
       sourceId: source.id,
-      url: `${link.origin}${link.pathname}`,
+      // the query is dropped (tracking noise), unless the id lives in it
+      url: `${link.origin}${link.pathname}${source.linkPattern?.includes("\\?") ? link.search : ""}`,
       titleOriginal: title,
       excerpt: "",
-      paywalled: false,
+      paywalled: titleOnly(source),
     });
+    ids.set(key, Number(m[1]));
   });
-  return [...byId.values()];
+  let out = [...byId.entries()];
+  if (source.keepLatest) {
+    out = out.sort((x, y) => (ids.get(y[0]) ?? 0) - (ids.get(x[0]) ?? 0)).slice(0, source.keepLatest);
+  }
+  return out.map(([, item]) => item);
 }
 
 async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>): Promise<R[]> {
@@ -221,7 +271,7 @@ export async function collectSource(
   known: Set<string> = new Set(),
 ): Promise<{ items: CollectedItem[]; report: CollectReport }> {
   try {
-    const body = await fetchText(source.url);
+    const body = await fetchText(source.url, source.trustCa);
     let items = source.kind === "rss" ? parseFeed(body, source) : parseLinks(body, source);
     if (items.length === 0) throw new Error("parsed 0 items");
     if (source.kind === "html") {

@@ -41,6 +41,14 @@ export type Source = {
   categories?: string[];
   // html sources: regex for article links on the front page; group 1 identifies the article
   linkPattern?: string;
+  // html sources: CSS selector, inside the link, of the element holding the headline
+  titleSelector?: string;
+  // html sources without dates: keep only this many articles, the ones with the highest numeric id
+  keepLatest?: number;
+  // free to read, but the page gives no text a reader or the AI can use: shown as a title only
+  headlineOnly?: boolean;
+  // PEM file of an extra root certificate to trust for this site, whose server sends an incomplete chain
+  trustCa?: string;
 };
 
 export type CollectReport = {
