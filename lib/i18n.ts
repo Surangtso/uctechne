@@ -1,0 +1,41 @@
+export type Lang = "ko" | "en";
+
+// Every piece of fixed text on the page, in both editions
+export const T = {
+  ko: {
+    tagline: "미국·중국 테크 미디어 기사를 한 곳에서 볼 수 있습니다. 본문은 원문 링크에서 확인할 수 있습니다.",
+    loading: "불러오는 중…",
+    empty: "표시할 기사가 없습니다.",
+    disclaimer: "번역과 요약은 운영자와 AI가 작성하며 오류가 있을 수 있습니다. 정확한 내용은 원문 링크에서 확인하세요.",
+    copyright: "각 글의 저작권은 해당 매체와 작성자에게 있습니다.",
+    takedown: "삭제·정정 요청",
+    curated: "큐레이션",
+    all: "전체",
+    us: "미국",
+    cn: "중국",
+    paywalled: "유료 매체 · 제목만",
+    headlineOnly: "제목만",
+    readOriginal: "원문 보기 ↗",
+    loginNote: "로그인이 필요할 수 있어요",
+    description: "미국·중국 테크 미디어 기사를 한 곳에서 볼 수 있습니다.",
+    switchTo: "English",
+  },
+  en: {
+    tagline: "Tech news from US and Chinese media in one place, translated into English. Read the full articles at the original links.",
+    loading: "Loading…",
+    empty: "No articles to show.",
+    disclaimer: "Translations and summaries are written by the operator and AI and may contain errors. Check the original link for the exact content.",
+    copyright: "Each article is copyrighted by its outlet and author.",
+    takedown: "Takedown / correction requests",
+    curated: "Curated",
+    all: "All",
+    us: "US",
+    cn: "China",
+    paywalled: "Paywalled · headline only",
+    headlineOnly: "Headline only",
+    readOriginal: "Read original ↗",
+    loginNote: "May require a login",
+    description: "Tech news from US and Chinese media in one place, translated into English.",
+    switchTo: "한국어",
+  },
+} as const satisfies Record<Lang, Record<string, string>>;
