@@ -27,6 +27,12 @@ export const SOURCES: Source[] = [
     url: "https://feeds.businessinsider.com/custom/all",
     categories: ["Tech"],
   },
+  // Wired and Ars Technica cover more than technology; the AI step keeps the technology items
+  { id: "wired", name: "Wired", lang: "en", kind: "rss", url: "https://www.wired.com/feed/rss" },
+  { id: "arstechnica", name: "Ars Technica", lang: "en", kind: "rss", url: "https://feeds.arstechnica.com/arstechnica/index" },
+  { id: "bloomberg-tech", name: "Bloomberg Technology", lang: "en", kind: "rss", url: "https://feeds.bloomberg.com/technology/news.rss" },
+  { id: "cnbc-tech", name: "CNBC Tech", lang: "en", kind: "rss", url: "https://www.cnbc.com/id/19854910/device/rss/rss.html" },
+  { id: "mit-tech-review", name: "MIT Technology Review", lang: "en", kind: "rss", url: "https://www.technologyreview.com/feed/" },
   { id: "tmtpost", name: "钛媒体", lang: "zh", kind: "rss", url: "https://www.tmtpost.com/rss.xml" },
   // the bare 36kr.com/feed sits behind a bot check; the www host serves the public feed
   { id: "36kr", name: "36氪", lang: "zh", kind: "rss", url: "https://www.36kr.com/feed" },
