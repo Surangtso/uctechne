@@ -77,6 +77,13 @@ export const SOURCES: Source[] = [
     kind: "qq",
     url: "https://i.news.qq.com/getSubNewsMixedList?guestSuid=8QIf3n9a7oYauzjc5QE%3D&tabId=om_article&caller=1&from_scene=103&offset_info=",
   },
+  { id: "geekpark", name: "极客公园", lang: "zh", kind: "rss", url: "https://www.geekpark.net/rss" },
+  { id: "ifanr", name: "爱范儿", lang: "zh", kind: "rss", url: "https://www.ifanr.com/feed" },
+  // no feed: article links from the front page, the date and text from each article page
+  { id: "pingwest", name: "品玩", lang: "zh", kind: "html", url: "https://www.pingwest.com/", linkPattern: "pingwest\\.com/a/(\\d+)" },
+  // many items are not technology (apps, lifestyle); the AI step keeps the technology ones
+  { id: "sspai", name: "少数派", lang: "zh", kind: "rss", url: "https://sspai.com/feed" },
+  { id: "ithome", name: "IT之家", lang: "zh", kind: "rss", url: "https://www.ithome.com/rss/" },
   { id: "jiemian", name: "界面新闻", lang: "zh", kind: "rss", url: "https://a.jiemian.com/index.php?m=article&a=rss" },
   { id: "cyzone", name: "创业邦", lang: "zh", kind: "rss", url: "https://www.cyzone.cn/rss/" },
   // front page only; the date and blurb come from each article page
