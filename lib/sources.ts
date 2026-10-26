@@ -42,5 +42,9 @@ export const SOURCES: Source[] = [
   { id: "tmtpost", name: "钛媒体", lang: "zh", kind: "rss", url: "https://www.tmtpost.com/rss.xml" },
   // the bare 36kr.com/feed sits behind a bot check; the www host serves the public feed
   { id: "36kr", name: "36氪", lang: "zh", kind: "rss", url: "https://www.36kr.com/feed" },
-  { id: "huxiu", name: "虎嗅", lang: "zh", kind: "html", url: "https://www.huxiu.com/" },
+  { id: "huxiu", name: "虎嗅", lang: "zh", kind: "html", url: "https://www.huxiu.com/", linkPattern: "/article/(\\d+)\\.html" },
+  { id: "jiemian", name: "界面新闻", lang: "zh", kind: "rss", url: "https://a.jiemian.com/index.php?m=article&a=rss" },
+  { id: "cyzone", name: "创业邦", lang: "zh", kind: "rss", url: "https://www.cyzone.cn/rss/" },
+  // front page only; the date and blurb come from each article page
+  { id: "pedaily", name: "投资界", lang: "zh", kind: "html", url: "https://www.pedaily.cn/", linkPattern: "pedaily\\.cn/\\d{6}/(\\d+)\\.shtml" },
 ];
