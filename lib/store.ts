@@ -239,9 +239,9 @@ export async function listPublic(opts: { sourceId?: string; limit: number }): Pr
     .order("sort_at", { ascending: false })
     .limit(opts.limit);
   q = opts.sourceId ? q.eq("source_id", opts.sourceId) : q.eq("curated", false);
-  // An outlet article waits for its summary, so a card never shows with only a title. Curated posts are
-  // written by hand and may have none.
-  if (opts.sourceId !== "curated") q = q.not("summary_ko", "is", null).neq("summary_ko", "");
+  // An outlet article waits for its summary, so a card never shows with only a title. Paywalled outlets are
+  // title-only by design and curated posts are written by hand, so neither needs one.
+  if (opts.sourceId !== "curated") q = q.or("paywalled.eq.true,and(summary_ko.not.is.null,summary_ko.neq.)");
   const rows = check(await q, "read feed") as unknown as Parameters<typeof fromRow>[0][];
   return rows.map(fromRow);
 }
