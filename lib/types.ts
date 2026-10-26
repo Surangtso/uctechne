@@ -39,6 +39,8 @@ export type Source = {
   paywalled?: boolean;
   // keep only feed items whose categories match
   categories?: string[];
+  // html sources: regex for article links on the front page; group 1 identifies the article
+  linkPattern?: string;
 };
 
 export type CollectReport = {

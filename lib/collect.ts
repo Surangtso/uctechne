@@ -104,20 +104,31 @@ function parseFeed(xml: string, source: Source): CollectedItem[] {
   return items;
 }
 
-// huxiu has no feed: article cards on the front page carry /article/<id>.html links
-function parseHuxiu(html: string, source: Source): CollectedItem[] {
+// Sites without a feed: article cards on the front page are links matching source.linkPattern
+function parseLinks(html: string, source: Source): CollectedItem[] {
   const $ = cheerio.load(html);
+  const pattern = new RegExp(source.linkPattern ?? "");
   const byId = new Map<string, CollectedItem>();
-  $('a[href*="/article/"]').each((_, a) => {
-    const href = $(a).attr("href") ?? "";
-    const m = href.match(/\/article\/(\d+)\.html/);
+  $("a[href]").each((_, a) => {
+    let link: URL;
+    try {
+      link = new URL($(a).attr("href") ?? "", source.url);
+    } catch {
+      return;
+    }
+    const m = link.href.match(pattern);
     if (!m) return;
-    const title = ($(a).find("h1,h2,h3").first().text() || $(a).attr("title") || "").trim();
+    // a heading or title attribute names the article; otherwise the link text does, if it reads like a headline
+    const own = $(a).text().replace(/\s+/g, " ").trim();
+    const title = ($(a).find("h1,h2,h3").first().text() || $(a).attr("title") || (own.length <= 80 ? own : "")).trim();
     if (title.length < 4) return;
-    if (byId.has(m[1])) return;
-    byId.set(m[1], {
+    const key = m[1] ?? m[0];
+    // the same article is linked more than once (image, label, headline): keep the fullest title
+    const seen = byId.get(key);
+    if (seen && seen.titleOriginal.length >= title.length) return;
+    byId.set(key, {
       sourceId: source.id,
-      url: `https://www.huxiu.com/article/${m[1]}.html`,
+      url: `${link.origin}${link.pathname}`,
       titleOriginal: title,
       excerpt: "",
       paywalled: false,
@@ -142,7 +153,7 @@ async function mapLimit<T, R>(list: T[], limit: number, fn: (x: T) => Promise<R>
 
 // Some lists give too little to summarize: the huxiu front page has no dates or blurbs, and the tmtpost feed
 // carries only a one-line subtitle. Their article pages hold more, so those are read for sources listed here.
-const DETAIL_SOURCES = new Set(["huxiu", "tmtpost"]);
+const DETAIL_SOURCES = new Set(["huxiu", "pedaily", "tmtpost"]);
 const SHORT_EXCERPT = 60; // fewer characters than this is not enough for the AI to work with
 
 type Detail = { excerpt: string; publishedAt?: string };
@@ -152,6 +163,7 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 // One failed request (bot check, dropped connection) is common, so a page is tried a few times with a growing
 // pause; an empty result counts as a failure too.
 async function fetchDetail(sourceId: string, url: string): Promise<Detail | null> {
+  if (!DETAIL_SOURCES.has(sourceId)) return null;
   for (let attempt = 1; attempt <= 3; attempt++) {
     const d = await fetchDetailOnce(sourceId, url);
     if (d && d.excerpt) return d;
@@ -163,7 +175,7 @@ async function fetchDetail(sourceId: string, url: string): Promise<Detail | null
 async function fetchDetailOnce(sourceId: string, url: string): Promise<Detail | null> {
   try {
     const $ = cheerio.load(await fetchText(url));
-    if (sourceId === "huxiu") {
+    if (sourceId === "huxiu" || sourceId === "pedaily") {
       // the page's meta tags carry a two-sentence blurb and the publish time
       const blurb = $('meta[name="description"]').attr("content") ?? "";
       const time = $('meta[property="article:published_time"]').attr("content") ?? "";
@@ -210,7 +222,7 @@ export async function collectSource(
 ): Promise<{ items: CollectedItem[]; report: CollectReport }> {
   try {
     const body = await fetchText(source.url);
-    let items = source.kind === "rss" ? parseFeed(body, source) : parseHuxiu(body, source);
+    let items = source.kind === "rss" ? parseFeed(body, source) : parseLinks(body, source);
     if (items.length === 0) throw new Error("parsed 0 items");
     if (source.kind === "html") {
       items = await mapLimit(
