@@ -4,11 +4,11 @@ import { dealIntoColumns } from "@/lib/columns";
 import { getFeed } from "@/lib/feed";
 import { timeAgo } from "@/lib/format";
 import { needsLogin } from "@/lib/platforms";
-import { SOURCES } from "@/lib/sources";
+import { SOURCES, regionOf } from "@/lib/sources";
 
 const PAGE_SIZE = 60;
 // flag emoji render as plain "US"/"CN" letters on Windows, so regions are written out
-const REGION = { en: "미국", zh: "중국" } as const;
+const REGION = { us: "미국", cn: "중국" } as const;
 const sourceOf = new Map(SOURCES.map((s) => [s.id, s]));
 // source_id of hand-curated posts (see lib/store.ts insertCurated)
 const CURATED = "curated";
@@ -92,7 +92,7 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
             const title = a.titleKo ?? a.titleOriginal;
             // outlet name (darker) and what follows it (region or author, kept gray)
             const outlet = a.curated ? (a.sourceLabel ?? "큐레이션") : (src?.name ?? a.sourceId);
-            const outletNote = a.curated ? a.author : src ? REGION[src.lang] : undefined;
+            const outletNote = a.curated ? a.author : src ? REGION[regionOf(src)] : undefined;
             return (
               <li
                 key={a.id}
@@ -159,10 +159,10 @@ function Nav({ activeId }: { activeId?: string }) {
   return (
     // one row: US outlets, CN outlets, 전체, and 큐레이션 pushed to the far right (rows wrap on narrow screens)
     <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
-      {(["en", "zh"] as const).map((lang) => (
-        <div key={lang} className="flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-medium tracking-wide text-muted">{lang === "en" ? "US" : "CN"}</span>
-          {SOURCES.filter((s) => s.lang === lang).map((s) => (
+      {(["us", "cn"] as const).map((region) => (
+        <div key={region} className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-medium tracking-wide text-muted">{region === "us" ? "US" : "CN"}</span>
+          {SOURCES.filter((s) => regionOf(s) === region).map((s) => (
             <Chip key={s.id} href={`/?source=${s.id}`} label={s.name} on={activeId === s.id} />
           ))}
         </div>

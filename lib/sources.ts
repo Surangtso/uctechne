@@ -1,5 +1,7 @@
 import type { Source } from "./types";
 
+export const regionOf = (s: Source): "us" | "cn" => s.region ?? (s.lang === "zh" ? "cn" : "us");
+
 export const SOURCES: Source[] = [
   { id: "techmeme", name: "Techmeme", lang: "en", kind: "rss", url: "https://www.techmeme.com/feed.xml" },
   { id: "verge", name: "The Verge", lang: "en", kind: "rss", url: "https://www.theverge.com/rss/index.xml" },
@@ -77,6 +79,33 @@ export const SOURCES: Source[] = [
     kind: "qq",
     url: "https://i.news.qq.com/getSubNewsMixedList?guestSuid=8QIf3n9a7oYauzjc5QE%3D&tabId=om_article&caller=1&from_scene=103&offset_info=",
   },
+  // AI-focused outlets
+  {
+    id: "jiqizhixin",
+    name: "机器之心",
+    lang: "zh",
+    kind: "jiqizhixin",
+    url: "https://www.jiqizhixin.com/api/article_library/articles.json?sort=time&page=1&per=20",
+  },
+  { id: "qbitai", name: "量子位", lang: "zh", kind: "rss", url: "https://www.qbitai.com/feed" },
+  { id: "zhidx", name: "智东西", lang: "zh", kind: "rss", url: "https://zhidx.com/rss" },
+  { id: "leiphone", name: "雷峰网", lang: "zh", kind: "rss", url: "https://www.leiphone.com/feed" },
+  // English-language outlets covering China, listed with the Chinese ones
+  // no feed: article links from the front page, the date and blurb from each article page
+  {
+    id: "krasia",
+    name: "KrASIA",
+    lang: "en",
+    region: "cn",
+    kind: "html",
+    url: "https://kr-asia.com/",
+    linkPattern: "kr-asia\\.com/([a-z0-9][a-z0-9-]{24,})$",
+  },
+  // the feed holds years of articles, newest first
+  { id: "technode", name: "TechNode", lang: "en", region: "cn", kind: "rss", url: "https://technode.com/feed/", keepLatest: 30 },
+  { id: "pandaily", name: "Pandaily", lang: "en", region: "cn", kind: "rss", url: "https://pandaily.com/feed/" },
+  { id: "scmp-tech", name: "SCMP Tech", lang: "en", region: "cn", kind: "rss", url: "https://www.scmp.com/rss/36/feed" },
+  { id: "rest-of-world", name: "Rest of World", lang: "en", region: "cn", kind: "rss", url: "https://restofworld.org/feed/" },
   { id: "geekpark", name: "极客公园", lang: "zh", kind: "rss", url: "https://www.geekpark.net/rss" },
   { id: "ifanr", name: "爱范儿", lang: "zh", kind: "rss", url: "https://www.ifanr.com/feed" },
   // no feed: article links from the front page, the date and text from each article page
