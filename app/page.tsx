@@ -109,7 +109,9 @@ async function Feed({ searchParams }: { searchParams: Promise<{ [key: string]: s
                   </span>
                   <span>·</span>
                   <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt)}</time>
-                  {a.paywalled && <span className="rounded bg-line px-1.5 py-0.5">유료 매체 · 제목만</span>}
+                  {a.paywalled && (
+                    <span className="rounded bg-line px-1.5 py-0.5">{src?.paywalled ? "유료 매체 · 제목만" : "제목만"}</span>
+                  )}
                 </div>
                 <h2 className="text-xl font-bold leading-snug">
                   <a href={a.url} target="_blank" rel="noopener noreferrer" className="hover:text-accent">
