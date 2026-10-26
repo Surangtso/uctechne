@@ -2,6 +2,7 @@ import { Suspense } from "react";
 import Link from "next/link";
 import { dealIntoColumns } from "@/lib/columns";
 import { getFeed } from "@/lib/feed";
+import { listPublic, searchWords } from "@/lib/store";
 import { timeAgo } from "@/lib/format";
 import { needsLogin, platformLabel } from "@/lib/platforms";
 import { T, type Lang } from "@/lib/i18n";
@@ -71,12 +72,17 @@ export default function Home({ lang, searchParams }: { lang: Lang; searchParams:
 async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; searchParams: SearchParams }) {
   const t = T[lang];
   const en = lang === "en";
-  const { source } = await searchParams;
+  const { source, q: rawQ } = await searchParams;
+  const query = (typeof rawQ === "string" ? rawQ : "").trim().slice(0, 100);
+  const searching = searchWords(query).length > 0;
   // only known ids reach the cache, so a made-up ?source= can't create cache entries
   const active = SOURCES.find((s) => s.id === source);
   const activeId = source === CURATED ? CURATED : active?.id;
   // only articles the AI step has classified as tech are listed (see listPublic)
-  const articles = await getFeed(activeId, PAGE_SIZE, lang);
+  // searches are not cached: there is no limit to the words people can type
+  const articles = searching
+    ? await listPublic({ sourceId: activeId, limit: PAGE_SIZE, lang, query })
+    : await getFeed(activeId, PAGE_SIZE, lang);
   const {
     columns: [left, right],
   } = dealIntoColumns(articles, lang);
@@ -84,7 +90,15 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
 
   return (
     <>
-      <Nav lang={lang} base={base} activeId={activeId} />
+      <Nav lang={lang} base={base} activeId={activeId} query={searching ? query : undefined} />
+      {searching && (
+        <p className="mb-4 text-sm text-tagline">
+          {t.resultsFor} “{query}” · {articles.length}
+          <Link href={base} className="ml-3 text-accent hover:underline">
+            {t.clearSearch}
+          </Link>
+        </p>
+      )}
       {articles.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted">{t.empty}</p>
       ) : (
@@ -117,7 +131,7 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
                     {outletNote ? ` · ${outletNote}` : ""}
                   </span>
                   <span>·</span>
-                  <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt, Date.now(), lang)}</time>
+                  <time dateTime={a.publishedAt ?? a.firstSeenAt}>{timeAgo(a.publishedAt ?? a.firstSeenAt, undefined, lang)}</time>
                   {a.paywalled && (
                     <span className="rounded bg-line px-1.5 py-0.5">{src?.paywalled ? t.paywalled : t.headlineOnly}</span>
                   )}
@@ -165,11 +179,26 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
   );
 }
 
-function Nav({ lang, base, activeId }: { lang: Lang; base: string; activeId?: string }) {
+function Nav({ lang, base, activeId, query }: { lang: Lang; base: string; activeId?: string; query?: string }) {
   const t = T[lang];
   const href = (id: string) => `${base}?source=${id}`;
   return (
-    // one row: US outlets, CN outlets, 전체, and 큐레이션 pushed to the far right (rows wrap on narrow screens)
+    <>
+    <form action={base} role="search" className="mb-4 flex gap-2">
+      <input
+        type="search"
+        name="q"
+        defaultValue={query}
+        maxLength={100}
+        placeholder={t.searchPlaceholder}
+        aria-label={t.search}
+        className="min-w-0 flex-1 rounded-full bg-card px-4 py-2 text-sm text-foreground placeholder:text-muted"
+      />
+      <button type="submit" className="shrink-0 rounded-full bg-accent px-4 py-2 text-sm text-background">
+        {t.search}
+      </button>
+    </form>
+    {/* one row: US outlets, CN outlets, 전체, and 큐레이션 pushed to the far right (rows wrap on narrow screens) */}
     <nav className="mb-6 flex flex-wrap items-center gap-2 text-sm">
       {(["us", "cn"] as const).map((region) => (
         <div key={region} className="flex flex-wrap items-center gap-2">
@@ -188,6 +217,7 @@ function Nav({ lang, base, activeId }: { lang: Lang; base: string; activeId?: st
         <Chip href={href(CURATED)} label={t.curated} on={activeId === CURATED} curated />
       </div>
     </nav>
+    </>
   );
 }
 

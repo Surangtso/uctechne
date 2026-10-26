@@ -279,7 +279,17 @@ export async function updateDetails(details: { url: string; excerpt: string; pub
 // Unprocessed rows stay out, so an untranslated title never shows while it waits for the next update.
 // Without a sourceId (the 전체 view) only outlet articles are listed; hand-curated posts appear only when
 // asked for with sourceId "curated" (the 큐레이션 button).
-export async function listPublic(opts: { sourceId?: string; limit: number; lang?: "ko" | "en" }): Promise<Article[]> {
+// Search words: what is typed is split on spaces and every word must appear somewhere in the titles, summary or
+// comment. Characters that mean something inside a PostgREST filter are dropped first.
+export const searchWords = (query: string): string[] =>
+  query
+    .replace(/["\%*_,()]/g, " ")
+    .split(/s+/)
+    .filter(Boolean)
+    .slice(0, 5)
+    .map((w) => w.slice(0, 40));
+
+export async function listPublic(opts: { sourceId?: string; limit: number; lang?: "ko" | "en"; query?: string }): Promise<Article[]> {
   const en = opts.lang === "en";
   let q = db()
     .from(TABLE)
@@ -287,7 +297,14 @@ export async function listPublic(opts: { sourceId?: string; limit: number; lang?
     .eq("is_tech", true)
     .order("sort_at", { ascending: false })
     .limit(opts.limit);
-  q = opts.sourceId ? q.eq("source_id", opts.sourceId) : q.eq("curated", false);
+  const words = searchWords(opts.query ?? "");
+  // a search covers curated posts too; the plain 전체 view does not
+  if (opts.sourceId) q = q.eq("source_id", opts.sourceId);
+  else if (words.length === 0) q = q.eq("curated", false);
+  const fields = en
+    ? ["title_original", "title_en", "summary_en", "comment_en", "comment_manual_en"]
+    : ["title_original", "title_ko", "summary_ko", "comment_ko", "comment_manual"];
+  for (const w of words) q = q.or(fields.map((f) => `${f}.ilike."*${w}*"`).join(","));
   // An outlet article waits for its summary, so a card never shows with only a title. Paywalled outlets are
   // title-only by design and curated posts are written by hand, so neither needs one.
   const summaryCol = en ? "summary_en" : "summary_ko";

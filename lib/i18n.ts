@@ -19,6 +19,10 @@ export const T = {
     loginNote: "로그인이 필요할 수 있어요",
     description: "미국·중국 테크 미디어 기사를 한 곳에서 볼 수 있습니다.",
     switchTo: "English",
+    searchPlaceholder: "키워드 검색 (예: 엔비디아, 휴머노이드)",
+    search: "검색",
+    resultsFor: "검색 결과",
+    clearSearch: "검색 지우기",
   },
   en: {
     tagline: "Tech news from US and Chinese media in one place, translated into English. Read the full articles at the original links.",
@@ -37,5 +41,9 @@ export const T = {
     loginNote: "May require a login",
     description: "Tech news from US and Chinese media in one place, translated into English.",
     switchTo: "한국어",
+    searchPlaceholder: "Search by keyword (e.g. Nvidia, humanoid)",
+    search: "Search",
+    resultsFor: "Results for",
+    clearSearch: "Clear search",
   },
 } as const satisfies Record<Lang, Record<string, string>>;
