@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getFeed } from "@/lib/feed";
 import { listPublic, searchWords } from "@/lib/store";
 import { T, type Lang } from "@/lib/i18n";
+import { AuthButton } from "./auth-button";
 import { ArticleList } from "./article-list";
 import { SavedList } from "./saved-list";
 import { SOURCES, nameOf, regionOf } from "@/lib/sources";
@@ -22,10 +23,13 @@ export default function Home({ lang, searchParams }: { lang: Lang; searchParams:
       <header className="mb-8">
         <div className="flex items-start justify-between gap-4">
           <h1 className="text-2xl font-bold tracking-tight">US &amp; China Tech Currents</h1>
-          {/* the other edition; lang on the link so screen readers pronounce it in its own language */}
-          <Link href={lang === "en" ? "/" : "/en"} lang={lang === "en" ? "ko" : "en"} className="shrink-0 rounded-full bg-card px-3 py-1 text-sm text-tagline hover:text-accent">
-            {t.switchTo}
-          </Link>
+          <div className="flex shrink-0 items-center gap-2">
+            <AuthButton lang={lang} />
+            {/* the other edition; lang on the link so screen readers pronounce it in its own language */}
+            <Link href={lang === "en" ? "/" : "/en"} lang={lang === "en" ? "ko" : "en"} className="shrink-0 rounded-full bg-card px-3 py-1 text-sm text-tagline hover:text-accent">
+              {t.switchTo}
+            </Link>
+          </div>
         </div>
         <p className="mt-2 text-sm text-tagline">{t.tagline}</p>
       </header>
