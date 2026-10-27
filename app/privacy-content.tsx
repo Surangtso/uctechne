@@ -31,11 +31,11 @@ const DOC: Record<Lang, { title: string; back: string; effective: string; intro:
       },
       {
         h: "4. 제3자 제공과 처리 위탁·국외 이전",
-        p: "이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다. 서비스 운영을 위해 아래 업체의 서비스를 이용하며, 이 과정에서 개인정보가 해외(미국 등) 서버에서 처리될 수 있습니다.",
+        p: "이용자의 개인정보를 제3자에게 판매하거나 제공하지 않습니다. 서비스 운영을 위해 아래 업체의 서비스를 이용하며, 이 과정에서 개인정보가 해외(일본, 미국 등) 서버에서 처리될 수 있습니다.",
         li: [
-          "Supabase: 로그인 인증과 데이터 저장 (이메일, 이름, 프로필 사진 주소, 계정 식별값)",
-          "Google: 로그인 인증",
-          "Vercel: 웹사이트 호스팅과 방문 통계 (집계 정보)",
+          "Supabase: 로그인 인증과 데이터 저장 (이메일, 이름, 프로필 사진 주소, 계정 식별값). 데이터는 일본 도쿄 리전에 저장됩니다.",
+          "Google(미국 등): 로그인 인증",
+          "Vercel(미국 등): 웹사이트 호스팅과 방문 통계 (집계 정보)",
         ],
       },
       {
@@ -53,6 +53,11 @@ const DOC: Record<Lang, { title: string; back: string; effective: string; intro:
       },
       { h: "8. 만 14세 미만", p: "만 14세 미만은 로그인 기능을 이용할 수 없습니다." },
       { h: "9. 방침의 변경", p: "이 방침을 바꾸면 시행일과 함께 이 페이지에 알립니다." },
+      {
+        h: "10. 운영자 및 개인정보 보호책임자",
+        p: "운영자 및 개인정보 보호책임자: Subeen Jung (대한민국). 개인정보와 관련한 문의, 열람·정정·삭제 요청은 아래 이메일로 보내 주세요.",
+        contact: "문의 이메일",
+      },
     ],
   },
   en: {
@@ -81,11 +86,11 @@ const DOC: Record<Lang, { title: string; back: string; effective: string; intro:
       },
       {
         h: "4. Sharing and service providers",
-        p: "We do not sell or give your personal information to third parties. To run the Service we use the providers below, so your information may be processed on servers outside Korea, including in the United States.",
+        p: "We do not sell or give your personal information to third parties. To run the Service we use the providers below, so your information may be processed on servers outside Korea, including in Japan and the United States.",
         li: [
-          "Supabase: sign-in authentication and data storage (email, name, profile picture URL, account identifier)",
-          "Google: sign-in authentication",
-          "Vercel: website hosting and visit statistics (aggregate data)",
+          "Supabase: sign-in authentication and data storage (email, name, profile picture URL, account identifier). Data is stored in the Tokyo, Japan region.",
+          "Google (United States and elsewhere): sign-in authentication",
+          "Vercel (United States and elsewhere): website hosting and visit statistics (aggregate data)",
         ],
       },
       {
@@ -103,6 +108,11 @@ const DOC: Record<Lang, { title: string; back: string; effective: string; intro:
       },
       { h: "8. Children", p: "Sign-in is not available to anyone under 14." },
       { h: "9. Changes", p: "If we change this policy, we will post the new version here with its effective date." },
+      {
+        h: "10. Operator and privacy contact",
+        p: "Operator and privacy officer: Subeen Jung (Republic of Korea). For any privacy question, or to access, correct, or delete your information, email the address below.",
+        contact: "Contact email",
+      },
     ],
   },
 };
