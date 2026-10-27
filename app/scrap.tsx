@@ -2,6 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import { T, type Lang } from "@/lib/i18n";
+import { authClient } from "@/lib/supabase-browser";
 
 // Saved articles live in this browser only (localStorage): a list of article ids, newest first
 const KEY = "uctechne:scraps";
@@ -44,15 +45,61 @@ function subscribe(cb: () => void) {
 // null on the server and during hydration, when the saved ids are not known yet
 export const useScraps = (): string[] | null => useSyncExternalStore(subscribe, snapshot, () => null);
 
-export function toggleScrap(id: string) {
-  const ids = snapshot();
-  const next = ids.includes(id) ? ids.filter((x) => x !== id) : [id, ...ids].slice(0, MAX);
+function writeLocal(ids: string[]): boolean {
   try {
-    localStorage.setItem(KEY, JSON.stringify(next));
+    localStorage.setItem(KEY, JSON.stringify(ids));
   } catch {
-    return;
+    return false;
   }
   listeners.forEach((cb) => cb());
+  return true;
+}
+
+// Signed in: every change is also written to the user's rows in the scraps table (row level security keeps each
+// list private), so the list follows them to other devices. Signed out: the browser copy is all there is.
+let userId: string | null = null;
+let syncedFor: string | null = null;
+let syncStarted = false;
+
+async function pull(id: string) {
+  const db = authClient();
+  if (!db) return;
+  const { data, error } = await db.from("scraps").select("article_id").order("created_at", { ascending: false }).limit(MAX);
+  if (error || !data) return;
+  const remote = data.map((r) => r.article_id as string);
+  // what was saved in this browser before signing in joins the account's list
+  const onlyLocal = snapshot().filter((x) => !remote.includes(x));
+  if (onlyLocal.length) await db.from("scraps").insert(onlyLocal.map((article_id) => ({ article_id })));
+  writeLocal([...onlyLocal, ...remote].slice(0, MAX));
+  syncedFor = id;
+}
+
+export function startScrapSync() {
+  const db = authClient();
+  if (!db || syncStarted) return;
+  syncStarted = true;
+  db.auth.onAuthStateChange((event, session) => {
+    if (event === "SIGNED_OUT") {
+      userId = null;
+      syncedFor = null;
+      writeLocal([]); // the list lives in the account now; do not leave it behind on a shared computer
+      return;
+    }
+    userId = session?.user.id ?? null;
+    // supabase-js must not be called from inside its own callback, so the pull is deferred
+    if (userId && syncedFor !== userId) setTimeout(() => void pull(userId!), 0);
+  });
+}
+
+export function toggleScrap(id: string) {
+  const ids = snapshot();
+  const adding = !ids.includes(id);
+  const next = adding ? [id, ...ids].slice(0, MAX) : ids.filter((x) => x !== id);
+  if (!writeLocal(next)) return;
+  const db = userId ? authClient() : null;
+  if (!db) return;
+  // a failed write leaves the browser copy ahead of the account; the next sign-in merges the two
+  void (adding ? db.from("scraps").insert({ article_id: id }) : db.from("scraps").delete().eq("article_id", id));
 }
 
 export function ScrapButton({ id, lang }: { id: string; lang: Lang }) {

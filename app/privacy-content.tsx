@@ -14,17 +14,17 @@ const DOC: Record<Lang, LegalDoc> = {
         li: [
           "Google 로그인 시: 이메일 주소, 이름, 프로필 사진 주소(Google이 제공), 계정 식별값, 로그인 시각",
           "방문 시: Vercel Web Analytics가 쿠키 없이 방문한 페이지, 유입 경로, 국가, 브라우저·기기 종류를 집계 형태로 수집합니다. 개인을 식별하지 않습니다.",
-          "스크랩: 이용자의 브라우저에만 저장되며 서버에 저장하지 않습니다. 스크랩 목록을 보여줄 때 기사 번호가 서버로 전송되지만 이용자와 연결하거나 저장하지 않습니다.",
+          "스크랩: 로그인하지 않으면 이용자의 브라우저에만 저장됩니다. 로그인하면 저장한 기사 번호가 계정과 연결되어 서버(Supabase)에 저장되고, 다른 기기에서도 보입니다. 스크랩 목록을 보여줄 때 기사 번호가 서버로 전송되지만 그 자체로 저장하지는 않습니다.",
         ],
       },
       {
         h: "2. 이용 목적",
-        li: ["로그인과 계정 식별", "문의·삭제 요청 응대", "서비스 이용 통계와 개선"],
+        li: ["로그인과 계정 식별", "스크랩을 계정에 저장해 여러 기기에서 보여주기", "문의·삭제 요청 응대", "서비스 이용 통계와 개선"],
         p: "새로운 목적으로 이용하게 되면 먼저 이 방침을 고쳐 알립니다.",
       },
       {
         h: "3. 보유 및 이용 기간",
-        p: "로그인 정보는 이용자가 삭제를 요청할 때까지 보관하며, 요청을 받으면 지체 없이 파기합니다. 법령에 따라 보존해야 하는 정보는 해당 기간 동안 보관합니다.",
+        p: "로그인 정보와 계정에 저장된 스크랩은 이용자가 삭제를 요청할 때까지 보관하며, 요청을 받으면 지체 없이 함께 파기합니다. 법령에 따라 보존해야 하는 정보는 해당 기간 동안 보관합니다.",
       },
       {
         h: "4. 제3자 제공과 처리 위탁·국외 이전",
@@ -42,7 +42,7 @@ const DOC: Record<Lang, LegalDoc> = {
       },
       {
         h: "6. 로컬 저장소",
-        p: "로그인 상태 유지와 스크랩 저장을 위해 브라우저의 저장소를 사용합니다. 브라우저 설정에서 언제든 삭제할 수 있으며, 삭제하면 로그아웃되고 스크랩 목록이 사라집니다.",
+        p: "로그인 상태 유지와 스크랩 저장을 위해 브라우저의 저장소를 사용합니다. 브라우저 설정에서 언제든 삭제할 수 있으며, 삭제하면 로그아웃되며, 로그인하지 않고 저장한 스크랩은 사라집니다. 계정에 저장된 스크랩은 다시 로그인하면 불러옵니다.",
       },
       {
         h: "7. 안전성 확보 조치",
@@ -69,17 +69,22 @@ const DOC: Record<Lang, LegalDoc> = {
         li: [
           "When you sign in with Google: your email address, name, profile picture URL (provided by Google), an account identifier, and the time you signed in.",
           "When you visit: Vercel Web Analytics collects aggregate data without cookies: pages viewed, referrer, country, and browser or device type. It does not identify individuals.",
-          "Saved articles: kept only in your browser and not stored on our servers. When your saved list is shown, article IDs are sent to the server, but they are not stored or linked to you.",
+          "Saved articles: if you are not signed in, kept only in your browser. If you are signed in, the IDs of the articles you save are linked to your account and stored on our server (Supabase), so they appear on your other devices. When your saved list is shown, article IDs are sent to the server, but that alone is not stored.",
         ],
       },
       {
         h: "2. Why we use it",
-        li: ["To sign you in and identify your account", "To answer questions and deletion requests", "To measure and improve the Service"],
+        li: [
+          "To sign you in and identify your account",
+          "To store your saved articles in your account and show them on your devices",
+          "To answer questions and deletion requests",
+          "To measure and improve the Service",
+        ],
         p: "If we start using it for a new purpose, we will update this policy first.",
       },
       {
         h: "3. How long we keep it",
-        p: "We keep sign-in information until you ask us to delete it, and delete it promptly after your request. Information we are legally required to keep is held for the period the law requires.",
+        p: "We keep sign-in information and the articles saved in your account until you ask us to delete them, and delete both promptly after your request. Information we are legally required to keep is held for the period the law requires.",
       },
       {
         h: "4. Sharing and service providers",
@@ -97,7 +102,7 @@ const DOC: Record<Lang, LegalDoc> = {
       },
       {
         h: "6. Browser storage",
-        p: "We use your browser storage to keep you signed in and to hold saved articles. You can clear it in your browser settings; doing so signs you out and removes your saved list.",
+        p: "We use your browser storage to keep you signed in and to hold saved articles. You can clear it in your browser settings; doing so signs you out and removes articles you saved without signing in. Articles saved in your account come back when you sign in again.",
       },
       {
         h: "7. Security",

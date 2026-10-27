@@ -5,11 +5,13 @@ import { T, type Lang } from "@/lib/i18n";
 import type { Article } from "@/lib/types";
 import { ArticleList } from "./article-list";
 import { loadSaved } from "./saved-actions";
+import { useSession } from "./auth-store";
 import { useScraps } from "./scrap";
 
 export function SavedList({ lang }: { lang: Lang }) {
   const t = T[lang];
   const ids = useScraps();
+  const session = useSession();
   const [loaded, setLoaded] = useState<Map<string, Article> | null>(null);
 
   const missing = ids?.some((id) => !loaded?.has(id)) ?? false;
@@ -29,7 +31,7 @@ export function SavedList({ lang }: { lang: Lang }) {
   const articles = ids.map((id) => loaded?.get(id)).filter((a): a is Article => !!a);
   return (
     <>
-      <p className="mb-4 text-sm text-muted">{t.savedNote}</p>
+      <p className="mb-4 text-sm text-muted">{session ? t.savedNoteAccount : t.savedNote}</p>
       {articles.length === 0 ? (
         <p className="py-16 text-center text-sm text-muted">{t.savedEmpty}</p>
       ) : (

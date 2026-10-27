@@ -30,7 +30,8 @@ export const T = {
     save: "스크랩",
     saved: "스크랩됨",
     savedView: "내 스크랩",
-    savedNote: "스크랩은 이 브라우저에만 저장됩니다. 다른 기기에서는 보이지 않고, 브라우저 데이터를 지우면 사라집니다.",
+    savedNote: "스크랩은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우면 사라집니다. 로그인하면 계정에 저장되어 다른 기기에서도 볼 수 있습니다.",
+    savedNoteAccount: "스크랩은 계정에 저장되어, 로그인한 다른 기기에서도 볼 수 있습니다.",
     savedEmpty: "스크랩한 기사가 없습니다. 카드의 스크랩 버튼을 눌러 저장하세요.",
   },
   en: {
@@ -61,7 +62,8 @@ export const T = {
     save: "Save",
     saved: "Saved",
     savedView: "Saved",
-    savedNote: "Saved articles are kept in this browser only. They do not appear on other devices and are lost if you clear browser data.",
+    savedNote: "Saved articles are kept in this browser only and are lost if you clear browser data. Sign in to keep them in your account and see them on other devices.",
+    savedNoteAccount: "Saved articles are stored in your account and appear on any device where you sign in.",
     savedEmpty: "Nothing saved yet. Use the Save button on a card.",
   },
 } as const satisfies Record<Lang, Record<string, string>>;
