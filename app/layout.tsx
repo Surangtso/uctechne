@@ -19,6 +19,8 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://uctechne.vercel.app"),
   title: "uctechne",
   description: "미국·중국 테크 미디어 기사를 한 곳에서 볼 수 있습니다.",
+  // proves to Google (Search Console, OAuth consent screen) that this site belongs to the operator
+  verification: { google: "fGDpda_zyQpQAlGSRTDACaUGFotXHMpJh6Pv-5SUAQw" },
   // what link previews (KakaoTalk, Facebook, Slack, ...) show; the image is app/opengraph-image.tsx
   openGraph: {
     type: "website",
