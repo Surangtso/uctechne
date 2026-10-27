@@ -9,7 +9,10 @@ import {
   englishBatch,
   summarizeBatch,
   translateBatch,
+  hasHan,
   untranslated,
+  type EnglishResult,
+  type SummaryResult,
   type TranslateResult,
   type Usage,
 } from "../lib/enrich";
@@ -33,7 +36,7 @@ async function main() {
     model: string,
     todo: Article[],
     run: (batch: Article[]) => Promise<{ results: R[]; usage: Usage }>,
-    apply: (a: Article, r: R) => void,
+    apply: (a: Article, r: R) => void | false,
     save: (a: Article) => Promise<void> = saveEnrichment,
   ) {
     if (todo.length === 0) {
@@ -59,7 +62,7 @@ async function main() {
             results.map(async (r) => {
               const a = byId.get(r.id);
               if (!a) return;
-              apply(a, r);
+              if (apply(a, r) === false) return;
               await save(a);
             }),
           );
@@ -83,7 +86,7 @@ async function main() {
     // stronger model gets it next; on that retry the result is kept as is, so nothing loops forever.
     if (!isRetry && untranslated(r)) {
       console.log(`  not translated, retrying: [${a.sourceId}] ${a.titleOriginal}`);
-      return;
+      return false;
     }
     applyTranslation(a, r);
     if (r.propaganda) console.log(`  left out as party/state messaging: [${a.sourceId}] ${a.titleOriginal}`);
@@ -96,9 +99,27 @@ async function main() {
     (b) => translateBatch(client, b, SUMMARY_MODEL),
     applyTitle(true),
   );
-  await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummary);
+  // Chinese characters left in a summary or comment mean a name was not translated: skip it once so the next pass
+  // asks again, and keep the second answer as it is, so nothing loops forever.
+  const applySummaryChecked = (isRetry: boolean) => (a: Article, r: SummaryResult) => {
+    if (!isRetry && (hasHan(r.summaryKo) || hasHan(r.commentKo))) {
+      console.log(`  Chinese characters left, retrying: [${a.sourceId}] ${a.titleKo}`);
+      return false;
+    }
+    applySummary(a, r);
+  };
+  const applyEnglishChecked = (isRetry: boolean) => (a: Article, r: EnglishResult) => {
+    if (!isRetry && !a.curated && [r.titleEn, r.summaryEn, r.commentEn].some(hasHan)) {
+      console.log(`  Chinese characters left, retrying: [${a.sourceId}] ${a.titleEn ?? a.titleKo}`);
+      return false;
+    }
+    applyEnglish(a, r);
+  };
+  await phase("summarize", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummaryChecked(false));
+  await phase("summarize (retry)", SUMMARY_MODEL, await pendingSummary(), (b) => summarizeBatch(client, b), applySummaryChecked(true));
   // the English edition: the last two weeks of articles plus the curated posts
-  await phase("english", SUMMARY_MODEL, await pendingEnglish(), (b) => englishBatch(client, b), applyEnglish, saveEnglish);
+  await phase("english", SUMMARY_MODEL, await pendingEnglish(), (b) => englishBatch(client, b), applyEnglishChecked(false), saveEnglish);
+  await phase("english (retry)", SUMMARY_MODEL, await pendingEnglish(), (b) => englishBatch(client, b), applyEnglishChecked(true), saveEnglish);
 }
 
 main().catch((e) => {
