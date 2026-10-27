@@ -58,6 +58,12 @@ export default function Home({ lang, searchParams }: { lang: Lang; searchParams:
           <Link href={lang === "en" ? "/en/privacy" : "/privacy"} className="underline decoration-dotted underline-offset-2 hover:text-accent">
             {t.privacy}
           </Link>
+          <span aria-hidden className="mx-2">
+            ·
+          </span>
+          <Link href={lang === "en" ? "/en/terms" : "/terms"} className="underline decoration-dotted underline-offset-2 hover:text-accent">
+            {t.terms}
+          </Link>
         </p>
       </footer>
     </div>
