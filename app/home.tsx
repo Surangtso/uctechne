@@ -7,6 +7,7 @@ import { AuthButton } from "./auth-button";
 import { ContactEmail } from "./contact-email";
 import { ArticleList } from "./article-list";
 import { SavedList } from "./saved-list";
+import { Briefings } from "./briefings";
 import { SOURCES, nameOf, regionOf } from "@/lib/sources";
 
 const PAGE_SIZE = 60;
@@ -75,6 +76,14 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
   const { source, q: rawQ, view } = await searchParams;
   const query = (typeof rawQ === "string" ? rawQ : "").trim().slice(0, 100);
   const searching = searchWords(query).length > 0;
+  if (view === "briefing") {
+    return (
+      <>
+        <Nav lang={lang} base={base} briefing />
+        <Briefings lang={lang} />
+      </>
+    );
+  }
   if (view === "saved") {
     return (
       <>
@@ -111,7 +120,7 @@ async function Feed({ lang, base, searchParams }: { lang: Lang; base: string; se
   );
 }
 
-function Nav({ lang, base, activeId, query, saved }: { lang: Lang; base: string; activeId?: string; query?: string; saved?: boolean }) {
+function Nav({ lang, base, activeId, query, saved, briefing }: { lang: Lang; base: string; activeId?: string; query?: string; saved?: boolean; briefing?: boolean }) {
   const t = T[lang];
   const href = (id: string) => `${base}?source=${id}`;
   return (
@@ -142,10 +151,11 @@ function Nav({ lang, base, activeId, query, saved }: { lang: Lang; base: string;
       ))}
       {/* a little extra room between the CN outlets and 전체 */}
       <div className="ml-2 flex">
-        <Chip href={base} label={t.all} on={!activeId && !saved} />
+        <Chip href={base} label={t.all} on={!activeId && !saved && !briefing} />
       </div>
       {/* flex, so the link is a block like the other chips and gets the same height */}
       <div className="ml-auto flex gap-2">
+        <Chip href={`${base}?view=briefing`} label={t.briefingView} on={!!briefing} />
         <Chip href={`${base}?view=saved`} label={t.savedView} on={!!saved} />
         <Chip href={href(CURATED)} label={t.curated} on={activeId === CURATED} curated />
       </div>

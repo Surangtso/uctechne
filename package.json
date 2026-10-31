@@ -9,6 +9,7 @@
     "lint": "eslint",
     "collect": "tsx --env-file-if-exists=.env.local scripts/collect.ts",
     "enrich": "tsx --env-file-if-exists=.env.local scripts/enrich.ts",
+    "briefing": "tsx --env-file-if-exists=.env.local scripts/briefing.ts",
     "update": "npm run collect && npm run enrich",
     "import-json": "tsx --env-file-if-exists=.env.local scripts/import-json.ts"
   },

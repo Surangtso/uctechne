@@ -284,7 +284,7 @@ export async function updateDetails(details: { url: string; excerpt: string; pub
 export const searchWords = (query: string): string[] =>
   query
     .replace(/["\%*_,()]/g, " ")
-    .split(/s+/)
+    .split(/\s+/)
     .filter(Boolean)
     .slice(0, 5)
     .map((w) => w.slice(0, 40));
@@ -389,4 +389,68 @@ export async function upsertArticles(articles: Article[]): Promise<number> {
     n += rows.length;
   }
   return n;
+}
+
+// ---- weekly briefings (see supabase/migrations/20261031_briefings.sql) ----
+
+export type WeeklyBriefing = { weekStart: string; body: string; articleCount: number };
+
+type WeekArticleRow = { source_id: string; title_ko: string; title_en: string | null; summary_ko: string | null; importance: number | null };
+
+// the week's most important tech articles; `total` counts all of the week's tech articles
+export async function articlesForWeek(weekStart: string, weekEnd: string, limit: number) {
+  const res = await db()
+    .from(TABLE)
+    .select("source_id,title_ko,title_en,summary_ko,importance", { count: "exact" })
+    .eq("is_tech", true)
+    .eq("curated", false)
+    .not("title_ko", "is", null)
+    .gte("sort_at", `${weekStart}T00:00:00Z`)
+    .lt("sort_at", `${weekEnd}T00:00:00Z`)
+    .order("importance", { ascending: false })
+    .order("sort_at", { ascending: false })
+    .limit(limit);
+  const rows = check(res, "read week articles") as WeekArticleRow[];
+  return {
+    total: res.count ?? rows.length,
+    articles: rows.map((r) => ({
+      sourceId: r.source_id,
+      titleKo: r.title_ko,
+      titleEn: r.title_en ?? undefined,
+      summaryKo: r.summary_ko ?? undefined,
+      importance: r.importance ?? 1,
+    })),
+  };
+}
+
+// weeks (Mondays) that already have a briefing in both languages
+export async function briefedWeeks(): Promise<Set<string>> {
+  const rows = check(await db().from("briefings").select("week_start,lang"), "read briefings") as { week_start: string; lang: string }[];
+  const langs = new Map<string, number>();
+  for (const r of rows) langs.set(r.week_start, (langs.get(r.week_start) ?? 0) + 1);
+  return new Set([...langs].filter(([, n]) => n >= 2).map(([w]) => w));
+}
+
+export async function saveBriefing(weekStart: string, ko: string, en: string, articleCount: number): Promise<void> {
+  const rows = [
+    { week_start: weekStart, lang: "ko", body: ko, article_count: articleCount },
+    { week_start: weekStart, lang: "en", body: en, article_count: articleCount },
+  ];
+  check(await db().from("briefings").upsert(rows, { onConflict: "week_start,lang" }), `save briefing ${weekStart}`);
+}
+
+// newest week first; an empty list (also before the table exists) just shows the empty state
+export async function listBriefings(lang: "ko" | "en", limit = 12): Promise<WeeklyBriefing[]> {
+  const res = await db()
+    .from("briefings")
+    .select("week_start,body,article_count")
+    .eq("lang", lang)
+    .order("week_start", { ascending: false })
+    .limit(limit);
+  if (res.error) return [];
+  return (res.data as { week_start: string; body: string; article_count: number }[]).map((r) => ({
+    weekStart: r.week_start,
+    body: r.body,
+    articleCount: r.article_count,
+  }));
 }

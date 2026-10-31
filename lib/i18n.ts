@@ -33,6 +33,10 @@ export const T = {
     savedNote: "스크랩은 이 브라우저에만 저장됩니다. 브라우저 데이터를 지우면 사라집니다. 로그인하면 계정에 저장되어 다른 기기에서도 볼 수 있습니다.",
     savedNoteAccount: "스크랩은 계정에 저장되어, 로그인한 다른 기기에서도 볼 수 있습니다.",
     savedEmpty: "스크랩한 기사가 없습니다. 카드의 스크랩 버튼을 눌러 저장하세요.",
+    briefingView: "주간 브리핑",
+    briefingNote: "지난 한 주의 주요 기사를 바탕으로 AI가 쓴 트렌드 요약입니다. 오류가 있을 수 있으니 자세한 내용은 각 기사의 원문에서 확인하세요.",
+    briefingCount: "그 주 테크 기사 {n}건 중 주요 기사 기준",
+    briefingEmpty: "아직 브리핑이 없습니다. 한 주가 끝나면 지난주 내용으로 올라옵니다.",
   },
   en: {
     tagline: "Tech news from US and Chinese media in one place, translated into English. Read the full articles at the original links.",
@@ -65,5 +69,9 @@ export const T = {
     savedNote: "Saved articles are kept in this browser only and are lost if you clear browser data. Sign in to keep them in your account and see them on other devices.",
     savedNoteAccount: "Saved articles are stored in your account and appear on any device where you sign in.",
     savedEmpty: "Nothing saved yet. Use the Save button on a card.",
+    briefingView: "Weekly Brief",
+    briefingNote: "A trend summary of the past week, written by AI from the week's top articles. It may contain errors; check each article's original for details.",
+    briefingCount: "Based on the top stories among {n} tech articles that week",
+    briefingEmpty: "No briefings yet. One appears after each week ends.",
   },
 } as const satisfies Record<Lang, Record<string, string>>;
